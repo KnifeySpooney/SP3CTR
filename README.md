@@ -1,8 +1,19 @@
 # SP3CTR (v0.0.4) - Spectral Packet Capture & Threat Recognition
 
-**SP3CTR (pronounced "specter")** is a user-friendly network packet capture and analysis tool designed with the cybersecurity hobbyist and learner in mind. It aims to demystify network traffic by providing a clear, intuitive interface and simplified data presentation, moving away from the complexity of tools like Wireshark or tcpdump for initial exploration.
+**SP3CTR** is a user-friendly network packet capture and analysis tool designed with the cybersecurity hobbyist and learner in mind. It aims to demystify network traffic by providing a clear, intuitive interface and simplified data presentation, moving away from the complexity of tools like Wireshark or tcpdump for initial exploration.
 
 This project is currently in its early stages (MVP) and focuses on providing a basic, web-based interface for real-time packet sniffing and display.
+
+## 🙏 Acknowledgements
+
+SP3CTR (pronounced "specter") is built with the help of several fantastic open-source projects:
+
+* **[Scapy](https://scapy.net/):** For powerful packet manipulation, sniffing, and crafting.
+* **[Python Websockets Library](https://websockets.readthedocs.io/):** For enabling real-time communication between the backend and frontend.
+* **[Tailwind CSS](https://tailwindcss.com/):** For the utility-first CSS framework used in the frontend.
+* **[Npcap](https://npcap.com/)/[libpcap](https://www.tcpdump.org/):** The underlying packet capture libraries that Scapy relies on.
+
+We are grateful to the developers and communities behind these tools.
 
 ## ✨ Core Mission
 
