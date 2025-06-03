@@ -1,4 +1,4 @@
-# SP3CTR 0.0.1 - Python Backend (WebSocket Server)
+# SP3CTR 0.0.4 - Python Backend (WebSocket Server)
 # Spectral Packet Capture & Threat Recognition
 # Version: 0.0.4 (TypeError Fix for handler)
 # Author: KnifeySpooney
