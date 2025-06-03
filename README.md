@@ -4,6 +4,15 @@
 
 This project is currently in its early stages (MVP) and focuses on providing a basic, web-based interface for real-time packet sniffing and display.
 
+## ⚠️ ⚠️ Important Npcap Licensing Notice: ## 
+
+SP3CTR uses Npcap (https://npcap.com) for packet capture. Npcap is **not open-source** and is **free only for non-commercial use**. 
+
+If you intend to use SP3CTR in a commercial setting, you must acquire an **Npcap OEM license** directly from Nmap/Npcap. SP3CTR does **not** bundle or distribute Npcap.
+
+For open-source compatible use, you may consider WinPcap as an alternative, though functionality may be limited.
+
+
 ## 🙏 Acknowledgements
 
 SP3CTR (pronounced "specter") is built with the help of several fantastic open-source projects:
@@ -155,4 +164,5 @@ This project is currently a personal development effort. However, ideas and feed
 ## 📝 License
 
 GPL2
+
 ---
