@@ -143,6 +143,5 @@ This project is currently a personal development effort. However, ideas and feed
 
 ## 📝 License
 
-Proprietary.
-
+GPL2
 ---
