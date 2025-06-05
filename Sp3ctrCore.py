@@ -1,6 +1,6 @@
-# SP3CTR 0.0.4 - Python Backend (WebSocket Server)
+# SP3CTR - Python Backend (WebSocket Server with Save Capture)
 # Spectral Packet Capture & Threat Recognition
-# Version: 0.0.4 (TypeError Fix for handler)
+# Version: 0.1.0 (Phase 1 - Save Capture Feature)
 # Author: KnifeySpooney
 # Inspired by clean, direct code philosophy. "Together, Strong"
 
@@ -12,9 +12,12 @@ import asyncio
 import websockets  # For WebSocket server functionality
 import threading  # To run sniffing in a separate thread
 from websockets.server import WebSocketServerProtocol  # For type hinting
+import os  # For path operations (saving files)
+from datetime import datetime  # For generating timestamped filenames
 
 try:
     from scapy.all import sniff, get_if_list, get_if_hwaddr, get_if_addr
+    from scapy.utils import wrpcap  # For writing PCAP files
     from scapy.layers.inet import IP, TCP, UDP, ICMP
     from scapy.layers.dns import DNS
     from scapy.layers.l2 import Ether
@@ -27,22 +30,39 @@ except ImportError as e:
 # --- Global Variables & Configuration ---
 WEBSOCKET_HOST = "localhost"
 WEBSOCKET_PORT = 8765
-CONNECTED_CLIENTS = set()  # A set to store active WebSocket connections
-sniffing_thread: threading.Thread | None = None  # Type hint for clarity
+CAPTURES_DIR = "captures"  # Directory to save pcap files
+
+CONNECTED_CLIENTS = set()
+sniffing_thread: threading.Thread | None = None
 stop_sniffing_event = threading.Event()
-current_sniffing_interface: str | None = None  # Type hint
+current_sniffing_interface: str | None = None
+captured_packets_buffer = []  # Buffer to store raw Scapy packets for saving
 
 # --- Version ---
-__version__ = "0.0.4"
+__version__ = "0.1.0"
 
 
-# --- Core Functions ---
+# --- Helper Functions ---
+def ensure_captures_dir():
+    """Ensures the captures directory exists."""
+    if not os.path.exists(CAPTURES_DIR):
+        try:
+            os.makedirs(CAPTURES_DIR)
+            print(f"Created directory for captures: {CAPTURES_DIR}")
+        except OSError as e:
+            print(f"Error creating captures directory '{CAPTURES_DIR}': {e}")
+            # Potentially fall back to current directory or handle error more gracefully
+            return False
+    return True
+
+
+# --- Core Functions (Interface Listing, Packet Data Extraction - largely unchanged) ---
 
 def list_network_interfaces_data():
     """
     Lists available network interfaces and returns data suitable for JSON.
     """
-    print("Discovering network interfaces for client...")
+    # print("Discovering network interfaces for client...") # Less verbose
     interfaces_data = []
     try:
         iface_names = get_if_list()
@@ -59,8 +79,8 @@ def list_network_interfaces_data():
                     "id": iface_name,
                     "name": f"{iface_name} (Details N/A)"
                 })
-        if not interfaces_data:
-            print("No usable network interfaces found by Scapy.")
+        # if not interfaces_data:
+        # print("No usable network interfaces found by Scapy.") # Client will see empty list
         return interfaces_data
     except Exception as e:
         print(f"Error discovering interfaces: {e}")
@@ -70,10 +90,6 @@ def list_network_interfaces_data():
 def get_packet_data(packet):
     """
     Extracts packet details into a dictionary for JSON serialization.
-    Args:
-        packet: A Scapy packet object.
-    Returns:
-        dict: A dictionary containing packet information.
     """
     packet_time = packet.time if hasattr(packet, 'time') else time.time()
     timestamp = time.strftime("%H:%M:%S", time.localtime(packet_time)) + f".{int((packet_time % 1) * 1000):03d}"
@@ -83,7 +99,7 @@ def get_packet_data(packet):
     protocol_name = "Unknown"
     length = len(packet)
     info = ""
-    flags = ""
+    # flags = "" # Not used directly in this simplified output dict
 
     if packet.haslayer(IP):
         ip_layer = packet.getlayer(IP)
@@ -95,8 +111,8 @@ def get_packet_data(packet):
             protocol_name = "TCP"
             src_port = tcp_layer.sport
             dst_port = tcp_layer.dport
-            flags = str(tcp_layer.flags)
-            info = f"[{flags}] Seq={tcp_layer.seq} Ack={tcp_layer.ack}"
+            flags_str = str(tcp_layer.flags)
+            info = f"[{flags_str}] Seq={tcp_layer.seq} Ack={tcp_layer.ack}"
         elif packet.haslayer(UDP):
             udp_layer = packet.getlayer(UDP)
             protocol_name = "UDP"
@@ -160,8 +176,8 @@ def get_packet_data(packet):
         "timestamp": timestamp,
         "srcIp": str(src_ip),
         "destIp": str(dst_ip),
-        "srcPort": str(src_port),
-        "destPort": str(dst_port),
+        "srcPort": str(src_port),  # Will be "N/A" if not applicable
+        "destPort": str(dst_port),  # Will be "N/A" if not applicable
         "protocol": protocol_name,
         "length": length,
         "info": info if info else "---"
@@ -178,11 +194,16 @@ async def send_to_clients(message_data: dict):
 
 async def packet_sender_callback(packet):
     """
-    Callback for Scapy's sniff. Converts packet to JSON and schedules sending via WebSocket.
+    Callback for Scapy's sniff. Appends to buffer, converts to JSON, and schedules sending.
     """
+    global captured_packets_buffer
     try:
-        packet_data = get_packet_data(packet)
-        asyncio.create_task(send_to_clients({"type": "packet", "data": packet_data}))
+        # Store the raw Scapy packet object
+        captured_packets_buffer.append(packet)
+
+        # Prepare data for WebSocket clients
+        packet_data_for_client = get_packet_data(packet)
+        asyncio.create_task(send_to_clients({"type": "packet", "data": packet_data_for_client}))
     except Exception as e:
         print(f"Error in packet_sender_callback: {e}")
 
@@ -190,20 +211,22 @@ async def packet_sender_callback(packet):
 def sniffing_loop(interface_name: str, stop_event: threading.Event, loop: asyncio.AbstractEventLoop):
     """
     The actual sniffing loop that runs in a separate thread.
-    Requires the main event loop to be passed for threadsafe operations.
     """
-    global current_sniffing_interface
+    global current_sniffing_interface, captured_packets_buffer  # Ensure buffer is accessible
     current_sniffing_interface = interface_name
+    # captured_packets_buffer.clear() # Clear buffer at the start of a new sniffing session - MOVED to handler
     print(f"Thread: Starting sniffing on {interface_name}")
 
     def scapy_callback_wrapper(pkt):
         asyncio.run_coroutine_threadsafe(packet_sender_callback(pkt), loop)
 
     try:
+        # store=1 would also work and Scapy would manage the list, but explicit buffer gives more control.
+        # For now, we are appending to our own buffer in the callback.
         sniff(iface=interface_name,
               prn=scapy_callback_wrapper,
               stop_filter=lambda pkt: stop_event.is_set(),
-              store=0)
+              store=0)  # Scapy itself won't store, we do it in the callback
     except PermissionError:
         print(f"Thread: Permission denied to sniff on {interface_name}.")
         asyncio.run_coroutine_threadsafe(
@@ -217,30 +240,32 @@ def sniffing_loop(interface_name: str, stop_event: threading.Event, loop: asynci
         print(f"Thread: Unexpected sniffing error: {e}")
         asyncio.run_coroutine_threadsafe(send_to_clients({"type": "error", "message": f"Sniffing error: {e}"}), loop)
     finally:
-        print(f"Thread: Sniffing stopped on {interface_name}")
-        asyncio.run_coroutine_threadsafe(send_to_clients({"type": "status", "message": "Capture stopped."}), loop)
+        print(f"Thread: Sniffing stopped on {interface_name}. {len(captured_packets_buffer)} packets in buffer.")
+        asyncio.run_coroutine_threadsafe(send_to_clients(
+            {"type": "status", "message": f"Capture stopped. {len(captured_packets_buffer)} packets buffered."}), loop)
         current_sniffing_interface = None
 
 
-async def handler(websocket: WebSocketServerProtocol, path: str = None):  # Made path optional
+async def handler(websocket: WebSocketServerProtocol, path: str = None):
     """
     Handles WebSocket connections and messages from clients.
     """
-    global sniffing_thread, stop_sniffing_event, current_sniffing_interface
+    global sniffing_thread, stop_sniffing_event, current_sniffing_interface, captured_packets_buffer
 
     main_event_loop = asyncio.get_running_loop()
 
     CONNECTED_CLIENTS.add(websocket)
-    print(f"Client connected: {websocket.remote_address}, Path: {path}")  # Log the path
+    print(f"Client connected: {websocket.remote_address}, Path: {path}")
     try:
         interfaces = list_network_interfaces_data()
         await websocket.send(json.dumps({"type": "interfaces", "data": interfaces}))
 
+        status_message = "Idle. Select interface and start capture."
         if current_sniffing_interface:
-            await websocket.send(
-                json.dumps({"type": "status", "message": f"Capture active on {current_sniffing_interface}"}))
-        else:
-            await websocket.send(json.dumps({"type": "status", "message": "Idle. Select interface and start capture."}))
+            status_message = f"Capture active on {current_sniffing_interface}. {len(captured_packets_buffer)} packets buffered."
+        elif captured_packets_buffer:  # Capture stopped, but buffer has packets
+            status_message = f"Capture stopped. {len(captured_packets_buffer)} packets buffered. Ready to save."
+        await websocket.send(json.dumps({"type": "status", "message": status_message}))
 
         async for message in websocket:
             try:
@@ -258,13 +283,14 @@ async def handler(websocket: WebSocketServerProtocol, path: str = None):  # Made
                         interface = data.get("interface")
                         if interface:
                             print(f"Received start_capture command for interface: {interface}")
+                            captured_packets_buffer.clear()  # Clear buffer for new session
                             stop_sniffing_event.clear()
                             sniffing_thread = threading.Thread(target=sniffing_loop,
                                                                args=(interface, stop_sniffing_event, main_event_loop),
                                                                daemon=True)
                             sniffing_thread.start()
-                            await websocket.send(
-                                json.dumps({"type": "status", "message": f"Capture started on {interface}"}))
+                            await send_to_clients(
+                                {"type": "status", "message": f"Capture started on {interface}"})  # Broadcast to all
                         else:
                             await websocket.send(
                                 json.dumps({"type": "error", "message": "No interface specified for capture."}))
@@ -273,8 +299,36 @@ async def handler(websocket: WebSocketServerProtocol, path: str = None):  # Made
                     if sniffing_thread and sniffing_thread.is_alive():
                         print("Received stop_capture command.")
                         stop_sniffing_event.set()
+                        # Status update will be sent from sniffing_loop's finally block
                     else:
                         await websocket.send(json.dumps({"type": "status", "message": "Capture not running."}))
+
+                elif command == "save_capture":
+                    print("Received save_capture command.")
+                    if not captured_packets_buffer:
+                        await websocket.send(json.dumps({"type": "error", "message": "No packets in buffer to save."}))
+                    elif sniffing_thread and sniffing_thread.is_alive():
+                        await websocket.send(json.dumps({"type": "error",
+                                                         "message": "Cannot save while capture is active. Please stop capture first."}))
+                    else:
+                        if not ensure_captures_dir():
+                            await websocket.send(json.dumps(
+                                {"type": "error", "message": "Could not create captures directory on server."}))
+                        else:
+                            timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+                            filename = os.path.join(CAPTURES_DIR, f"sp3ctr_capture_{timestamp_str}.pcap")
+                            try:
+                                wrpcap(filename, captured_packets_buffer)
+                                print(f"Capture saved to {filename}")
+                                await websocket.send(
+                                    json.dumps({"type": "status", "message": f"Capture saved to server: {filename}"}))
+                                # Decide if buffer should be cleared after save.
+                                # For now, let's keep it until a new capture starts.
+                            except Exception as e:
+                                print(f"Error saving PCAP file: {e}")
+                                await websocket.send(
+                                    json.dumps({"type": "error", "message": f"Failed to save capture: {e}"}))
+
             except json.JSONDecodeError:
                 print(f"Invalid JSON received: {message}")
                 await websocket.send(json.dumps({"type": "error", "message": "Invalid JSON command."}))
@@ -295,9 +349,13 @@ async def main_server_loop():
     """
     Main function to start the WebSocket server.
     """
+    if not ensure_captures_dir():
+        print("Warning: Captures directory could not be ensured. Saves might fail.")
+
     async with websockets.serve(handler, WEBSOCKET_HOST, WEBSOCKET_PORT) as server:
         print(f"--- SP3CTR {__version__} - WebSocket Server Ready ---")
         print(f"Listening on ws://{WEBSOCKET_HOST}:{WEBSOCKET_PORT}")
+        print(f"PCAP files will be saved in '{os.path.abspath(CAPTURES_DIR)}' directory (if created).")
         await asyncio.Future()
 
     # --- Main Execution ---
