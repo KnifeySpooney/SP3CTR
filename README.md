@@ -151,9 +151,9 @@ Follow these steps to get SP3CTR up and running on your local machine.
 ## 📜 Short-Term Enhancements Roadmap
 
 * More detailed packet dissection and display.
-* Client-side filtering of displayed packets.
+* Client-side filtering of displayed packets. ✅
 * Basic threat intelligence integration (e.g., flagging known malicious IPs).
-* Saving and loading packet captures (PCAP format).
+* Saving ✅ and loading packet captures (PCAP format). 
 * Visualizations of network traffic ("spectral" display).
 * Integration with SH4DOW and F0RT components.
 
