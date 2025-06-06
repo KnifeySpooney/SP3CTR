@@ -4,15 +4,15 @@ Welcome to the SP3CTR (pronounced "specter") development roadmap! This document 
 
 Our goal is to build SP3CTR into an indispensable tool for cybersecurity hobbyists, students, and anyone curious about the digital conversations happening on their network.
 
-## 🌱 Current Status: MVP (v0.0.4 - "Foundation")
+##  🐉 Current Status: Incremental MVP (v0.2.1 - "Quadra")
 
 ### ✅ Core Functionality
 
-- 🖥️ Web-based UI for interaction  
-- 📡 Network interface selection  
-- ⏯️ Start/Stop real-time packet capture  
-- 📄 Basic live display of packet essentials (Time, IPs, Proto, Length, Info)  
-- 🔗 WebSocket communication between Python backend (Scapy) and HTML/JS frontend  
+- 🖥️ Web-based UI for interaction  ✅
+- 📡 Network interface selection  ✅
+- ⏯️ Start/Stop real-time packet capture  ✅
+- 📄 Basic live display of packet essentials (Time, IPs, Proto, Length, Info)  ✅
+- 🔗 WebSocket communication between Python backend (Scapy) and HTML/JS frontend  ✅
 
 ### 🎨 Basic UI
 
@@ -29,9 +29,9 @@ Our development will proceed in phases, incrementally adding features and refini
 
 Focused on making the current tool more robust, user-friendly, and capable for basic analysis.
 
-#### 💾 Save & Load Captures
+#### 💾 Save & Load Captures - 50 % Complete
 
-- Implement functionality to save captured packets to PCAP files  
+- Implement functionality to save captured packets to PCAP files  ✅
 - Allow loading and analyzing existing PCAP files within SP3CTR's interface  
 
 #### 📚 Enhanced Packet Detail View
@@ -44,10 +44,10 @@ Focused on making the current tool more robust, user-friendly, and capable for b
 - Introduce more intuitive icons for protocols and actions  
 - Refine the layout for better readability and information hierarchy  
 
-#### 🔍 Advanced Basic Filtering
+#### 🔍 Advanced Basic Filtering - 50 % Complete
 
 - Expand pre-defined filters (e.g., "Show only HTTP/S traffic", "Show only DNS traffic")  
-- Implement a simple text input field for filtering by IP address, port number, or protocol name  
+- Implement a simple text input field for filtering by IP address, port number, or protocol name  ✅
 
 ---
 
