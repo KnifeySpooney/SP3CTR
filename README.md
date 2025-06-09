@@ -34,28 +34,36 @@ SP3CTR has achieved MVP. Core sniffing, PCAP saves, and basic filters are (final
 > 🧭 View the [ROADMAP.md] to see what's coming next  
 > 💡 Read [PHILOSOPHY.md] to understand why SP3CTR exists at all
 
+# 🧠 Architecture Overview
 
----
+SP3CTR operates on a multi-stage flow:
 
-## 🔧 Features at a Glance
+    Sniff traffic using libpcap/Npcap bindings
 
-✅ Dark-mode UI for readability  
-✅ Detects interfaces automatically  
-✅ Live traffic streamed over WebSocket  
-✅ Responsive, scrollable packet table  
-✅ Human-friendly packet summaries  
-✅ Shows:
+    Parse raw packets into protocol layers (Ethernet/IP/TCP/etc.)
 
-- 🕒 Timestamps
-- 🧭 Source & destination (IP or MAC)
-- 🔢 Ports (if applicable)
-- 🧬 Protocol (TCP, UDP, ICMP, etc.)
-- 📦 Packet size
-- ✏️ Protocol summary line
-- 🖍️ Color-coded rows by protocol
+    Filter for local activity + outbound traffic
 
-⚡ Keeps UI smooth using Python threading  
-🌐 Works entirely in your browser
+    Render events using a planned terminal-UI framework
+
+Everything is event-driven. No async data is stored, and no long-term logs are written unless you implement that yourself.
+
+See DATAS3NTRY and LOGICS3NTRY modules in /src/ for architectural core.
+
+# 📜 License
+
+SP3CTR is licensed under the GNU General Public License v2.0 (GPLv2).
+
+This is a copyleft license. You are free to use, study, modify, and distribute this software, provided that any derivative works remain licensed under the same terms. You must disclose your source, and you may not close the code.
+
+    TL;DR: If you build on this, your code must stay open. No exceptions.
+    SP3CTR exists to remain free, and that freedom is protected—aggressively.
+
+Read the full license → LICENSE
+🔗 Contact
+
+👤 Author: KnifeySpooney
+🌐 Website: https://knifeyspooney.github.io
 
 ---
 
