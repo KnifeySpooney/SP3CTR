@@ -1,199 +1,199 @@
-# SP3CTR: Spectral Packet Capture & Threat Recognition V 0.1.2
+# SP3CTR
+## Spectral Packet Capture & Threat Recognition
 
-[![License: GPL v2](https://img.shields.io/badge/license-GPLv2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
+[![Version](https://img.shields.io/badge/version-0.1.2-blue.svg)](https://github.com/knifeyspooney/sp3ctr)
+[![License](https://img.shields.io/badge/license-GPLv2-green.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](#installation)
 
-**SP3CTR** (pronounced *Specter*) is a privacy-respecting packet visualization tool that inspects your own machine's outbound traffic, parses key protocols, and renders digestible, locally-processed metadata. It does *not* exfiltrate data, perform exploits, or rely on external APIs. It is deliberately scoped.
+> A privacy-respecting packet visualization tool for understanding your system's network behavior
 
-This is not a tool for pen testing, fuzzing, or intrusion  
-It’s a transparency tool—for yourself, and your own systems  
-It’s minimalist, local, and human-first  
+SP3CTR (pronounced "specter") is an ethical network monitoring tool that inspects your machine's outbound traffic, parses key protocols, and renders digestible metadata—all processed locally on your system. It's designed as a transparency tool for your own systems, not for compromising others.
 
-> 🔐 All logic runs locally. SP3CTR never phones home.  
-> 🧭 See [PHILOSOPHY.md] for a full ethical breakdown.
+## 🎯 Core Principles
 
-# **💭 Philosophy and Intent**
+- **🔐 Privacy First**: All processing happens locally. SP3CTR never phones home.
+- **👁️ Transparency**: Understand how your systems communicate, not exploit others.
+- **🛡️ Zero Exfiltration**: No telemetry, no cloud dependencies, no data collection.
+- **✊ Free as in Speech**: Copyleft license ensures the tool remains free forever.
 
-SP3CTR is built on a deliberate rejection of bloat, surveillance, and opacity. It is not a stripped-down Wireshark clone—it is an ethical alternative with strict constraints. It’s designed to help people understand how their own systems communicate outward, not how to compromise others.
+## ✨ Features
 
-    ✊ This project is free as in speech, not just free as in beer.
-    ✍️ Copyleft is enforced—see license.
+| Feature | Description |
+|---------|-------------|
+| 🌐 **Cross-Platform** | Works on Windows, macOS, and Linux |
+| 📡 **Real-Time Monitoring** | Live outbound traffic capture and analysis |
+| 📦 **Protocol Parsing** | Deep packet inspection (Ethernet → IP → TCP/UDP) |
+| 🎛️ **Visual Interface** | Human-friendly real-time packet events |
+| 🧪 **Educational Focus** | Designed for learning and transparency |
+| 💾 **PCAP Support** | Save and load packet captures
 
-## 🧰 Features
 
-- 🌐 Cross-platform: works on macOS, Windows, and Linux (with caveats)
-- 🛡 Zero exfiltration: no telemetry, no cloud dependencies
-- 📡 Live traffic capture: outbound packets only
-- 📦 Layered protocol parsing: Ethernet → IP → TCP/UDP
-- 🎛 Human-friendly visual output: real-time packet events + host summaries
-- 🧪 Educational and ethical by design
-
-## 🧪 Project Status
-
-SP3CTR has achieved MVP. Core sniffing, PCAP saves, and basic filters are (finally) functional. UI/UX remains in flux—display logic is undergoing live iteration, and thus user-facing instructions are intentionally deferred until v1.0.
-
-> 🧭 View the [ROADMAP.md] to see what's coming next  
-> 💡 Read [PHILOSOPHY.md] to understand why SP3CTR exists at all
-
-# 🧠 Architecture Overview
-
-SP3CTR operates on a multi-stage flow:
-
-    Sniff traffic using libpcap/Npcap bindings
-
-    Parse raw packets into protocol layers (Ethernet/IP/TCP/etc.)
-
-    Filter for local activity + outbound traffic
-
-    Render events using a planned terminal-UI framework
-
-Everything is event-driven. No async data is stored, and no long-term logs are written unless you implement that yourself.
-
-See DATAS3NTRY and LOGICS3NTRY modules in /src/ for architectural core.
-
-# 📜 License
-
-SP3CTR is licensed under the GNU General Public License v2.0 (GPLv2).
-
-This is a copyleft license. You are free to use, study, modify, and distribute this software, provided that any derivative works remain licensed under the same terms. You must disclose your source, and you may not close the code.
-
-    TL;DR: If you build on this, your code must stay open. No exceptions.
-    SP3CTR exists to remain free, and that freedom is protected—aggressively.
-
-Read the full license → LICENSE
-🔗 Contact
-
-👤 Author: KnifeySpooney
-🌐 Website: https://knifeyspooney.github.io
-
----
-
-## 📥 Install & Run
-
-### 📦 Requirements:
-
-- ✅ Python 3.8+
-- ✅ pip
-- ✅ Chrome, Firefox, or Edge
-- ✅ `Npcap` (Windows) or `libpcap` (Linux/macOS)
-
-## 🛠️ Tech Stack
-
-* **Backend:** Python 3
-    * Scapy: For packet capture and manipulation.
-    * Websockets: For real-time communication with the frontend.
-    * Asyncio: For asynchronous operations in the WebSocket server.
-    * Threading: To run Scapy sniffing without blocking the server.
-* **Frontend:** HTML, CSS (Tailwind CSS), JavaScript
-    * Vanilla JS for WebSocket client logic and DOM manipulation.
-
-## ⚙️ Setup and Installation
-
-Follow these steps to get SP3CTR up and running on your local machine.
+## 🚀 Quick Start
 
 ### Prerequisites
 
-* **Python 3.8+:** Ensure you have a compatible Python version installed.
-* **pip:** Python package installer.
-* **Web Browser:** A modern web browser (Chrome, Firefox, Edge, etc.).
-* **Packet Capture Library (Npcap/libpcap):**
-    * **Windows:** **Npcap** is required. Download and install it from the [Npcap website](https://npcap.com/#download). It's recommended to install it with "WinPcap API-compatible Mode" if you use other tools that might rely on WinPcap.
-    * **Linux:** **libpcap** is usually required. Install it using your distribution's package manager:
-        * Debian/Ubuntu: `sudo apt-get update && sudo apt-get install libpcap-dev python3-dev`
-        * Fedora: `sudo dnf install libpcap-devel python3-devel`
-        * Arch Linux: `sudo pacman -S libpcap python`
-    * **macOS:** libpcap is typically pre-installed with Xcode Command Line Tools. If not, installing Xcode Command Line Tools should provide it: `xcode-select --install`
+## ⚠️ Legal Note: Npcap Licensing
 
-### Running SP3CTR
+SP3CTR uses Npcap for packet capture on Windows.
 
-1.  **Start the Python Backend (WebSocket Server):**
-    Open a terminal, navigate to your project directory, activate your virtual environment (if you created one), and run the Python backend script.
-    **Important:** Packet sniffing requires administrator/root privileges.
-    * **Windows:** Open your terminal (Command Prompt or PowerShell) **as Administrator**.
-        ```bash
-        python Sp3ctrCore.py
-        ```
-    * **Linux/macOS:**
-        ```bash
-        sudo python3 Sp3ctrCore.py
-        ```
-    You should see output similar to:
-    ```
-    --- SP3CTR [version] - WebSocket Server Ready ---
-    Listening on ws://localhost:8765
-    ```
+🔒 Npcap is not open source and is only free for non-commercial use
 
-2.  **Serve and Open the HTML Frontend:**
-    The HTML frontend needs to be served via an HTTP server for WebSocket connections to work correctly from the browser.
-    * Open a **new terminal window/tab**.
-    * Navigate to the directory where your `sp3ctr_frontend.html` (or your HTML file name) is located.
-    * Start Python's built-in HTTP server:
-        ```bash
-        # If you use python3 primarily:
-        python3 -m http.server 8000
-        # Or if you use python primarily:
-        python -m http.server 8000
-        ```
-        (You can use a different port if 8000 is busy, just not 8765).
-    * Open your web browser and navigate to:
-        `http://localhost:8000/sp3ctrUI.html`
-      
+🧾 If you're using SP3CTR in a commercial setting, you must obtain a license from Npcap's developers
 
-3.  **Using SP3CTR:**
-    * The web page should connect to the WebSocket server.
-    * The "Network Interface" dropdown should populate.
-    * Select an interface and click "Start Capture".
-    * Packets should start appearing in the table.
-    * Click "Stop Capture" to halt sniffing.
+📦 SP3CTR does not distribute Npcap—it only interfaces with it if you’ve installed it separately
 
-## 🩺 Troubleshooting
+🔁 You may try using WinPcap instead where functionality allows, but expect instability.
 
-* **`ModuleNotFoundError: No module named 'scapy'` (or `websockets`):**
-    * Ensure you have activated your virtual environment (if used) before running `pip install`.
-    * Make sure you are running the Python script using the same Python interpreter/environment where the packages were installed. Check your IDE's interpreter settings (e.g., in PyCharm or VS Code).
-    * Try reinstalling the package: `pip uninstall scapy websockets && pip install scapy websockets`
+| Requirement | Version | Purpose |
+|-------------|---------|---------|
+| Python | 3.8+ | Backend runtime |
+| pip | Latest | Package management |
+| Modern Browser | Chrome/Firefox/Edge | Frontend interface |
+| Packet Library | See below | Network capture |
 
-* **Python Backend: `PermissionError: [Errno 1] Operation not permitted` or `Socket error: [Errno 13] Permission denied` (or similar):**
-    * This means Scapy doesn't have the necessary permissions to sniff packets.
-    * **Solution:** Run the Python backend script with administrator/root privileges (e.g., `sudo python3 Sp3ctrCore.py` on Linux/macOS, or "Run as administrator" for your terminal on Windows).
+### Platform-Specific Setup
 
-* **Python Backend: Errors related to `libpcap` or `Npcap` not found/not working:**
-    * **Scapy relies on a packet capture library like Npcap (Windows) or libpcap (Linux/macOS).**
-    * **Windows:**
-        * Ensure **Npcap** is installed correctly. Download from [Npcap website](https://npcap.com/#download).
-        * During Npcap installation, ensure "WinPcap API-compatible Mode" is checked if you have older tools that might need it, though Scapy generally works well with Npcap's native mode.
-        * You might need to restart your system after installing/reinstalling Npcap.
-    * **Linux:**
-        * Ensure `libpcap-dev` (or equivalent like `libpcap-devel`) is installed. For example: `sudo apt-get install libpcap-dev` or `sudo dnf install libpcap-devel`.
-        * Sometimes, the issue can be with user permissions to access network devices even with sudo. This is less common for simple Scapy sniffing but can occur in complex setups.
-    * **macOS:**
-        * libpcap should be included with Xcode Command Line Tools. If you encounter issues, try reinstalling them: `xcode-select --install`.
-        * Ensure your user has permissions. Running with `sudo` is generally required.
+#### Windows
+1. Install [Npcap](https://nmap.org/npcap/) (recommended: enable "WinPcap API-compatible Mode")
+2. Run Command Prompt as Administrator
 
-* **HTML Frontend: "Status: Connecting to WebSocket..." or "Status: Connection Error" and no interfaces load:**
-    * **Verify the Python WebSocket server is running** and you see the "Listening on ws://localhost:8765" message in its terminal.
-    * **Ensure you are serving the HTML file via an HTTP server** (e.g., `python -m http.server 8000`) and accessing it via `http://localhost:8000/your_file.html`, NOT via `file:///...`. Browsers restrict WebSocket connections from `file:///` origins.
-    * **Check the browser's Developer Console (F12)** for WebSocket connection errors or JavaScript errors.
-    * **Firewall:** Ensure your local firewall isn't blocking connections on port 8765 or 8000 for `localhost`. This is less common for localhost connections but possible.
+#### Linux
+```bash
+# Debian/Ubuntu
+sudo apt-get update && sudo apt-get install libpcap-dev python3-dev
 
-* **No Interfaces Listed in Dropdown (but server seems to be running):**
-    * Check the Python backend terminal for any errors during interface discovery.
-    * Ensure Npcap/libpcap is functioning correctly, as Scapy relies on it to list interfaces.
+# Fedora
+sudo dnf install libpcap-devel python3-devel
 
-## 📜 Short-Term Enhancements Roadmap
+# Arch Linux
+sudo pacman -S libpcap python
+```
 
-* More detailed packet dissection and display.
-* Client-side filtering of displayed packets. ✅
-* Basic threat intelligence integration (e.g., flagging known malicious IPs).
-* Saving ✅ and loading packet captures (PCAP format). 
-* Visualizations of network traffic ("spectral" display).
-* Integration with SH4DOW and F0RT components.
+#### macOS
+```bash
+# Install Xcode Command Line Tools (includes libpcap)
+xcode-select --install
+```
+
+### Installation & Launch
+
+1. **Install Dependencies**
+   ```bash
+   pip install scapy websockets
+   ```
+
+2. **Start Backend Server** (requires admin/root privileges)
+   ```bash
+   # Windows (as Administrator)
+   python Sp3ctrCore.py
+   
+   # Linux/macOS
+   sudo python3 Sp3ctrCore.py
+   ```
+   
+   Expected output: `--- SP3CTR [version] - WebSocket Server Ready --- Listening on ws://localhost:8765`
+
+3. **Launch Frontend**
+   ```bash
+   # In a new terminal
+   python3 -m http.server 8000
+   ```
+   
+   Open browser to: `http://localhost:8000/sp3ctrUI.html`
+
+## 🔧 Troubleshooting
+
+<details>
+<summary><strong>Common Issues & Solutions</strong></summary>
+
+### ModuleNotFoundError
+- **Cause**: Missing Python packages
+- **Solution**: `pip install scapy websockets` (activate virtual environment if using one)
+
+### Permission Errors
+- **Cause**: Insufficient privileges for packet capture
+- **Solution**: Run backend with admin/root privileges (`sudo` on Unix, "Run as Administrator" on Windows)
+
+### Npcap/libpcap Issues
+- **Cause**: Packet capture library not properly installed
+- **Solution**: Reinstall packet library, restart system if needed
+
+### Frontend Connection Problems
+- **Symptoms**: Cannot connect to backend
+- **Checklist**:
+  - ✅ Backend server is running
+  - ✅ Accessing via `http://localhost:8000` (not `file://`)
+  - ✅ Check browser console (F12) for errors
+  - ✅ Firewall not blocking port 8765
+
+### Empty Interface List
+- **Cause**: Packet library installation issues
+- **Solution**: Check backend terminal for errors, reinstall packet library
+
+</details>
+
+## 📋 Project Status
+
+**Current Stage**: Minimum Viable Product (MVP) ✅
+
+**Completed Features:**
+- ✅ Core packet sniffing functionality
+- ✅ PCAP save/load capabilities
+- ✅ Basic filtering system
+- ✅ Client-side packet filtering
+
+**In Development:**
+- 🔄 UI/UX improvements (active iteration)
+- 🔄 Enhanced packet dissection
+- 🔄 Threat intelligence integration
+
+## 🛣️ Roadmap
+
+### Short-Term Goals
+- [ ] **Enhanced Packet Analysis**: More detailed protocol dissection
+- [ ] **Threat Intelligence**: Flag known malicious IPs and domains
+- [ ] **Spectral Visualizations**: Network traffic visualization dashboard
+- [ ] **Performance Optimization**: Improved handling of high-traffic scenarios
+
+### Future Integration
+- **SH4DOW**: Secure Honeypot for Adversary Deception and Operational Warning
+- **F0RT**: Fortified Operations & Response Toolkit (a functional GUI combining many tools)
 
 ## 🤝 Contributing
 
+We welcome contributions from the community! Here's how you can help:
 
+### Ways to Contribute
+- **🐛 Bug Reports**: Found an issue? [Open an issue](https://github.com/knifeyspooney/sp3ctr/issues) with reproduction steps
+- **💡 Feature Requests**: Have an idea? Start a discussion in our issues
+- **🔧 Code Contributions**: Fork the repo and submit a pull request
+- **📚 Documentation**: Help improve our docs and examples
 
-## 📝 License
+### Development Guidelines
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-GPL2
+## 📄 License
+
+**GNU General Public License v2.0 (GPLv2)**
+
+SP3CTR is copyleft software. You're free to use, study, modify, and distribute it, but any derivative works must also be open source under the same license.
+
+**In Plain English**: If you build on SP3CTR, your code must also be open source. No exceptions. This ensures the tool remains free forever.
+
+[Read the full license]
+
+## 📞 Contact & Resources
+
+- **Author**: [KnifeySpooneyy]
+- **Documentation**: [PHILOSOPHY.md] | [ROADMAP.md]
+- **Issues**: [GitHub Issues](https://github.com/knifeyspooney/sp3ctr/issues)
 
 ---
+
+<div align="center">
+<strong>Built with ❤️ for network transparency and privacy</strong>
+</div>
