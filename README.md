@@ -1,49 +1,72 @@
-# SP3CTR (v0.0.4) - Spectral Packet Capture & Threat Recognition
+# SP3CTR: Spectral Packet Capture & Threat Recognition V 0.1.2
 
-**SP3CTR** is a user-friendly network packet capture and analysis tool designed with the cybersecurity hobbyist and learner in mind. It aims to demystify network traffic by providing a clear, intuitive interface and simplified data presentation, moving away from the complexity of tools like Wireshark or tcpdump for initial exploration.
+[![License: GPL v2](https://img.shields.io/badge/license-GPLv2-blue.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
-This project is currently in its early stages (MVP) and focuses on providing a basic, web-based interface for real-time packet sniffing and display.
+**SP3CTR** (pronounced *Specter*) is a privacy-respecting packet visualization tool that inspects your own machine's outbound traffic, parses key protocols, and renders digestible, locally-processed metadata. It does *not* exfiltrate data, perform exploits, or rely on external APIs. It is deliberately scoped.
 
-## ⚠️ ⚠️ Important Npcap Licensing Notice: ## 
+This is not a tool for pen testing, fuzzing, or intrusion  
+It’s a transparency tool—for yourself, and your own systems  
+It’s minimalist, local, and human-first  
 
-SP3CTR uses Npcap (https://npcap.com) for packet capture. Npcap is **not open-source** and is **free only for non-commercial use**. 
+> 🔐 All logic runs locally. SP3CTR never phones home.  
+> 🧭 See [PHILOSOPHY.md] for a full ethical breakdown.
 
-If you intend to use SP3CTR in a commercial setting, you must acquire an **Npcap OEM license** directly from Nmap/Npcap. SP3CTR does **not** bundle or distribute Npcap.
+# **💭 Philosophy and Intent**
 
-For open-source compatible use, you may consider WinPcap as an alternative, though functionality may be limited.
+SP3CTR is built on a deliberate rejection of bloat, surveillance, and opacity. It is not a stripped-down Wireshark clone—it is an ethical alternative with strict constraints. It’s designed to help people understand how their own systems communicate outward, not how to compromise others.
+
+    ✊ This project is free as in speech, not just free as in beer.
+    ✍️ Copyleft is enforced—see license.
+
+## 🧰 Features
+
+- 🌐 Cross-platform: works on macOS, Windows, and Linux (with caveats)
+- 🛡 Zero exfiltration: no telemetry, no cloud dependencies
+- 📡 Live traffic capture: outbound packets only
+- 📦 Layered protocol parsing: Ethernet → IP → TCP/UDP
+- 🎛 Human-friendly visual output: real-time packet events + host summaries
+- 🧪 Educational and ethical by design
+
+## 🧪 Project Status
+
+SP3CTR has achieved MVP. Core sniffing, PCAP saves, and basic filters are (finally) functional. UI/UX remains in flux—display logic is undergoing live iteration, and thus user-facing instructions are intentionally deferred until v1.0.
+
+> 🧭 View the [ROADMAP.md] to see what's coming next  
+> 💡 Read [PHILOSOPHY.md] to understand why SP3CTR exists at all
 
 
-## 🙏 Acknowledgements
+---
 
-SP3CTR (pronounced "specter") is built with the help of several fantastic open-source projects:
+## 🔧 Features at a Glance
 
-* **[Scapy](https://scapy.net/):** For powerful packet manipulation, sniffing, and crafting.
-* **[Python Websockets Library](https://websockets.readthedocs.io/):** For enabling real-time communication between the backend and frontend.
-* **[Tailwind CSS](https://tailwindcss.com/):** For the utility-first CSS framework used in the frontend.
-* **[Npcap](https://npcap.com/)/[libpcap](https://www.tcpdump.org/):** The underlying packet capture libraries that Scapy relies on.
+✅ Dark-mode UI for readability  
+✅ Detects interfaces automatically  
+✅ Live traffic streamed over WebSocket  
+✅ Responsive, scrollable packet table  
+✅ Human-friendly packet summaries  
+✅ Shows:
 
-We are grateful to the developers and communities behind these tools.
+- 🕒 Timestamps
+- 🧭 Source & destination (IP or MAC)
+- 🔢 Ports (if applicable)
+- 🧬 Protocol (TCP, UDP, ICMP, etc.)
+- 📦 Packet size
+- ✏️ Protocol summary line
+- 🖍️ Color-coded rows by protocol
 
-## ✨ Core Mission
+⚡ Keeps UI smooth using Python threading  
+🌐 Works entirely in your browser
 
-* **Accessibility:** Make network traffic analysis understandable for beginners and hobbyists.
-* **Clarity:** Present packet information in plain language with a clean UI.
-* **Learning Tool:** Serve as a practical application for understanding networking concepts and Python/JavaScript development.
+---
 
-## 🚀 Current Features (MVP - v0.0.4)
+## 📥 Install & Run
 
-* **Web-Based UI:** A clean, dark-themed interface accessible via a web browser.
-* **Network Interface Detection:** Lists available network interfaces for capture (via Python backend).
-* **Real-time Packet Capture:** Start and stop packet sniffing on a selected interface.
-* **Live Packet Display:** Captured packets are streamed in real-time to the web UI, showing:
-    * Timestamp
-    * Source & Destination IP Addresses (or MAC addresses for L2)
-    * Source & Destination Ports (for TCP/UDP)
-    * Protocol (TCP, UDP, ICMP, DNS, etc.)
-    * Packet Length
-    * Basic Info/Summary of the packet content.
-* **WebSocket Communication:** Utilizes WebSockets for efficient, real-time data transfer between the Python backend (Scapy) and the HTML/JavaScript frontend.
-* **Basic Protocol Color-Coding:** Simple visual cues for different protocols in the packet list.
+### 📦 Requirements:
+
+- ✅ Python 3.8+
+- ✅ pip
+- ✅ Chrome, Firefox, or Edge
+- ✅ `Npcap` (Windows) or `libpcap` (Linux/macOS)
 
 ## 🛠️ Tech Stack
 
@@ -159,7 +182,7 @@ Follow these steps to get SP3CTR up and running on your local machine.
 
 ## 🤝 Contributing
 
-This project is currently a personal development effort. However, ideas and feedback are welcome!
+
 
 ## 📝 License
 
