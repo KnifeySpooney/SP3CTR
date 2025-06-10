@@ -1,6 +1,6 @@
 # run_sp3ctr.py
-# Python-based launcher for SP3CTR (specter) - Because I don't feel like debugging a .bat file. 
-# Version 1.0
+# Python-based launcher for SP3CTR (specter)
+# Version 0.5b - Prep for hashing
 
 import subprocess
 import time
@@ -26,7 +26,7 @@ FRONTEND_HTML_PATH = os.path.join(SCRIPT_DIR, FRONTEND_HTML_NAME)
 def print_header():
     """Prints a nice header for the launcher."""
     print("============================================================")
-    print(" SP3CTR Python Launcher v1.0")
+    print(" SP3CTR (specter) Python Launcher v0.5b")
     print("============================================================")
     print(f"Script Directory: {SCRIPT_DIR}")
     print(f"Python Executable: {PYTHON_EXE}")
@@ -50,7 +50,7 @@ def check_files():
     return True
 
 def start_backend_server():
-    """Starts the SP3CTR backend WebSocket server in a new console window. You're welcome."""
+    """Starts the SP3CTR backend WebSocket server in a new console window."""
     print(f"\nAttempting to start SP3CTR Backend Server ('{BACKEND_SCRIPT_NAME}')...")
     print("IMPORTANT: The backend requires administrator/root privileges for packet sniffing.")
     print("If SP3CTR fails to list interfaces or sniff, re-run this launcher script as Administrator/sudo.")
@@ -129,7 +129,7 @@ if __name__ == "__main__":
         print("   2. Close the 'SP3CTR Frontend Server' window (or press Ctrl+C in it).")
         print("============================================================")
         print("\nThis launcher window can be closed if the servers started successfully,")
-        print("or press Ctrl+C here to attempt to terminate them (60% of the time it works, everytime.).")
+        print("or press Ctrl+C here to attempt to terminate them (experimental).")
         
         # Keep the launcher script running so Ctrl+C can be caught.
         # Or, if subprocesses are truly detached in new windows, this could exit.
