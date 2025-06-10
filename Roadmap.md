@@ -4,7 +4,7 @@ Welcome to the SP3CTR (pronounced "specter") development roadmap! This document 
 
 Our goal is to build SP3CTR into an indispensable tool for cybersecurity hobbyists, students, and anyone curious about the digital conversations happening on their network.
 
-##  🐉 Current Status: Incremental MVP (v0.2.1 - "Quadra")
+##  🐉 Current Status: Incremental MVP (v0.2.5 - "Ruxton")
 
 ### ✅ Core Functionality
 
@@ -34,9 +34,9 @@ Focused on making the current tool more robust, user-friendly, and capable for b
 - Implement functionality to save captured packets to PCAP files  ✅
 - Allow loading and analyzing existing PCAP files within SP3CTR's interface  
 
-#### 📚 Enhanced Packet Detail View
+#### 📚 Enhanced Packet Detail View - 50% complete
 
-- Provide a dedicated panel to show more detailed, human-readable information about a selected packet  
+- Provide a dedicated panel to show more detailed, human-readable information about a selected packet  ✅
 - Include tooltips ❓ to explain common networking terms and abbreviations directly in the UI  
 
 #### 🎨 UI Polish & Refinements
