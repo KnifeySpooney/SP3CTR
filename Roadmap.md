@@ -4,7 +4,7 @@ Welcome to the SP3CTR (pronounced "specter") development roadmap! This document 
 
 Our goal is to build SP3CTR into an indispensable tool for cybersecurity hobbyists, students, and anyone curious about the digital conversations happening on their network.
 
-##  🐉 Current Status: Incremental MVP (v0.2.5 - "Ruxton")
+##  🏝️ Current Status: Incremental MVP (v0.2.5 - "Ruxton")
 
 ### ✅ Core Functionality
 
