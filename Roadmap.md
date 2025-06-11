@@ -4,7 +4,7 @@ Welcome to the SP3CTR (pronounced "specter") development roadmap! This document 
 
 Our goal is to build SP3CTR into an indispensable tool for cybersecurity hobbyists, students, and anyone curious about the digital conversations happening on their network.
 
-##  🏝️ Current Status: Incremental MVP (v0.2.5 - "Ruxton")
+##  ⛵ Current Status: Incremental MVP (v0.3.1 - "Galiano")
 
 ### ✅ Core Functionality
 
@@ -13,6 +13,9 @@ Our goal is to build SP3CTR into an indispensable tool for cybersecurity hobbyis
 - ⏯️ Start/Stop real-time packet capture  ✅
 - 📄 Basic live display of packet essentials (Time, IPs, Proto, Length, Info)  ✅
 - 🔗 WebSocket communication between Python backend (Scapy) and HTML/JS frontend  ✅
+- 💽 Saving of PCAP files locally ✅ (NEW)
+- 📊 Loading of locally stored PCAP files ✅ (NEW)
+- 🧑‍💻 Enhanced Packet View ✅ (NEW)
 
 ### 🎨 Basic UI
 
