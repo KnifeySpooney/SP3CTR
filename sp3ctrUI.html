@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SP3CTR 0.2.0 - Packet Detail View</title>
+    <title>SP3CTR Frontend - 0.3.1 "Galiano"</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #1a202c; color: #e2e8f0; overflow-x: hidden; } 
@@ -16,12 +16,16 @@
         .btn-start { @apply bg-green-500 hover:bg-green-600 text-white; }
         .btn-stop { @apply bg-red-500 hover:bg-red-600 text-white; }
         .btn-save { @apply bg-sky-500 hover:bg-sky-600 text-white; }
+        .btn-load { @apply bg-teal-500 hover:bg-teal-600 text-white; }
+        .btn-filter { @apply bg-indigo-500 hover:bg-indigo-600 text-white; }
+        .btn-clear-filter { @apply bg-gray-500 hover:bg-gray-600 text-white; }
         .btn-disabled { @apply bg-gray-600 text-gray-400 cursor-not-allowed pointer-events-none; }
         .table-fixed-layout { table-layout: fixed; }
         #detail-panel { transition: transform 0.3s ease-in-out; transform: translateX(100%); }
         #detail-panel.visible { transform: translateX(0); }
         .packet-row.selected { background-color: #3f628e; }
         .packet-row:hover { background-color: #2d3748; }
+        .packet-row { cursor: pointer; }
         .detail-layer { border: 1px solid #4a5568; border-radius: 0.5rem; margin-bottom: 0.75rem; background-color: #2d3748; }
         .detail-layer-header { background-color: #4a5568; padding: 0.5rem 0.75rem; font-weight: bold; cursor: pointer; }
         .detail-layer-content { padding: 0.75rem; max-height: 500px; overflow-y: auto; }
@@ -32,27 +36,34 @@
         .status-capturing { background-color: #34d399; animation: pulse-green 1.5s infinite; }
         .status-stopped { background-color: #ef4444; }
         .status-connecting { background-color: #f59e0b; animation: pulse-amber 1.5s infinite; }
+        #pcap-modal-overlay { @apply fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50; }
+        #pcap-modal-content { @apply bg-gray-800 rounded-lg shadow-xl p-6 w-11/12 md:w-1/2 lg:w-1/3; }
+        #pcap-file-list li { @apply p-2 rounded-md hover:bg-gray-700 text-sm; cursor: pointer; }
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(52, 211, 153, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); } }
         @keyframes pulse-amber { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
+        .toast { @apply fixed bottom-5 right-5 p-3 rounded-md shadow-lg text-sm z-50; animation: fadeInOutToast 4s ease-in-out forwards; }
+        .toast-error { @apply bg-red-600 text-white; }
+        .toast-info { @apply bg-sky-600 text-white; }
+        .toast-success { @apply bg-green-600 text-white; }
+        @keyframes fadeInOutToast { 0% { opacity: 0; transform: translateY(20px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(20px); } }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
 
-    <header class="bg-gray-800 p-4 shadow-lg"> 
-        <h1 class="text-2xl font-bold text-sky-400 text-center">SP3CTR 0.2.0 "Ruxton"</h1>
+    <header class="bg-slate-800/70 backdrop-blur-lg p-4 shadow-lg border-b border-slate-700/50"> 
+        <h1 class="text-2xl font-bold text-sky-400 text-center">SP3CTR - 0.3.1 "Galiano"</h1>
     </header>
 
     <div class="flex flex-grow overflow-hidden relative">
-        <!-- Main Content Area -->
         <div id="main-content" class="flex-grow flex flex-col p-4 gap-4 transition-all duration-300 w-full">
-            <section id="controls" class="bg-gray-800 p-4 rounded-lg shadow-md">
+            <section id="controls" class="bg-slate-800/70 backdrop-blur-lg p-4 rounded-lg shadow-md border border-slate-700/50">
                 <div class="flex items-center mb-2">
                     <span id="status-indicator-light" class="status-indicator status-connecting"></span>
                     <span id="capture-status" class="text-sm text-gray-400">Status: Initializing...</span>
                 </div>
                 <div class="mb-4">
                     <label for="network-interface" class="block text-sm font-medium text-gray-300 mb-1">Network Interface:</label>
-                    <select id="network-interface" class="w-full bg-gray-700 border border-gray-600 text-gray-200 rounded-md p-2" disabled>
+                    <select id="network-interface" class="w-full bg-gray-700/80 border border-gray-600 text-gray-200 rounded-md p-2" disabled>
                         <option value="">Awaiting WebSocket Connection...</option>
                     </select>
                 </div>
@@ -60,24 +71,33 @@
                     <button id="start-capture-btn" class="btn btn-start w-full sm:w-auto" disabled>Start Capture</button>
                     <button id="stop-capture-btn" class="btn btn-stop w-full sm:w-auto" disabled>Stop Capture</button>
                     <button id="save-capture-btn" class="btn btn-save w-full sm:w-auto" disabled>Save Capture</button>
+                    <button id="load-pcap-btn" class="btn btn-load w-full sm:w-auto" disabled>Load from File</button>
                 </div>
             </section>
 
-            <main id="packet-display-area" class="flex-grow bg-gray-800 rounded-lg shadow-inner overflow-x-auto">
-                <div class="overflow-y-auto h-[calc(100vh-230px)]"> 
+            <section id="filter-controls" class="bg-slate-800/70 backdrop-blur-lg p-3 rounded-lg shadow-md border border-slate-700/50">
+                <div class="flex flex-col sm:flex-row items-center gap-2">
+                    <label for="filter-input" class="text-sm font-medium text-gray-300 sm:mb-0">Filter:</label>
+                    <input type="text" id="filter-input" placeholder="IP, Protocol, Info..." class="flex-grow bg-gray-700/80 border border-gray-600 text-gray-200 rounded-md p-2 text-sm">
+                    <button id="apply-filter-btn" class="btn btn-filter w-full sm:w-auto text-sm">Apply</button>
+                    <button id="clear-filter-btn" class="btn btn-clear-filter w-full sm:w-auto text-sm">Clear</button>
+                </div>
+            </section>
+
+            <main id="packet-display-area" class="flex-grow bg-slate-800/70 backdrop-blur-lg rounded-lg shadow-inner overflow-x-auto border border-slate-700/50">
+                <div class="overflow-y-auto h-[calc(100vh-300px)]"> 
                     <table class="min-w-full table-fixed-layout border-collapse">
-                        <thead class="sticky top-0 bg-gray-700 z-10">
-                            <!-- Table Headers -->
+                        <thead class="sticky top-0 bg-slate-700/80 backdrop-blur-lg z-10">
                             <tr>
-                                <th class="w-1/6 p-2 border border-gray-600 text-left text-sm font-semibold text-sky-300">Time</th>
-                                <th class="w-1/6 p-2 border border-gray-600 text-left text-sm font-semibold text-sky-300">Source IP</th>
-                                <th class="w-1/6 p-2 border border-gray-600 text-left text-sm font-semibold text-sky-300">Dest. IP</th>
-                                <th class="w-1/12 p-2 border border-gray-600 text-left text-sm font-semibold text-sky-300">Proto</th>
-                                <th class="w-1/12 p-2 border border-gray-600 text-left text-sm font-semibold text-sky-300">Length</th>
-                                <th class="w-1/3 p-2 border border-gray-600 text-left text-sm font-semibold text-sky-300">Info</th>
+                                <th class="w-1/6 p-2 text-left text-sm font-semibold text-sky-300">Time</th>
+                                <th class="w-1/6 p-2 text-left text-sm font-semibold text-sky-300">Source IP</th>
+                                <th class="w-1/6 p-2 text-left text-sm font-semibold text-sky-300">Dest. IP</th>
+                                <th class="w-1/12 p-2 text-left text-sm font-semibold text-sky-300">Proto</th>
+                                <th class="w-1/12 p-2 text-left text-sm font-semibold text-sky-300">Length</th>
+                                <th class="w-1/3 p-2 text-left text-sm font-semibold text-sky-300">Info</th>
                             </tr>
                         </thead>
-                        <tbody id="packet-table-body" class="divide-y divide-gray-700">
+                        <tbody id="packet-table-body" class="divide-y divide-slate-700">
                             <tr id="no-packets-row">
                                 <td colspan="6" class="p-4 text-center text-gray-500">Select an interface and start capture to see packets.</td>
                             </tr>
@@ -87,8 +107,7 @@
             </main>
         </div>
 
-        <!-- Packet Detail Side Panel -->
-        <aside id="detail-panel" class="bg-gray-900 w-full md:w-2/5 lg:w-1/3 xl:w-1/4 h-full absolute top-0 right-0 shadow-2xl p-4 flex flex-col z-20 border-l-2 border-gray-700">
+        <aside id="detail-panel" class="bg-slate-900/80 backdrop-blur-lg w-full md:w-2/5 lg:w-1/3 xl:w-1/4 h-full absolute top-0 right-0 shadow-2xl p-4 flex flex-col z-20 border-l-2 border-slate-700/50">
             <div class="flex justify-between items-center mb-4 flex-shrink-0">
                 <h2 class="text-lg font-bold text-sky-400">Packet Details</h2>
                 <button id="close-detail-btn" class="p-1 rounded-full text-2xl leading-none hover:bg-gray-700">&times;</button>
@@ -97,288 +116,160 @@
                 <p class="text-gray-500">Click on a packet in the table to see its details here.</p>
             </div>
         </aside>
+
+        <div id="pcap-modal-overlay" class="hidden">
+            <div id="pcap-modal-content" class="border border-slate-700/50">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-teal-400">Load Saved Capture</h2>
+                    <button id="close-pcap-modal-btn" class="p-1 rounded-full text-2xl leading-none hover:bg-gray-700">&times;</button>
+                </div>
+                <div id="pcap-file-list-container" class="max-h-64 overflow-y-auto">
+                    <ul id="pcap-file-list"></ul>
+                </div>
+            </div>
+        </div>
     </div>
     
-    <footer class="p-3 bg-gray-800 text-center text-xs text-gray-500 shadow-lg mt-auto">
-        SP3CTR - Enhanced Packet Detail View
+    <div id="toast-container"></div>
+
+    <footer class="p-3 bg-slate-800/70 backdrop-blur-lg text-center text-xs text-gray-500 shadow-lg mt-auto border-t border-slate-700/50">
+        SP3CTR - Phase One Alpha-1
     </footer>
 
     <script>
-        console.log("SP3CTR Script Loaded (v4.0 - Corrected Packet Detail View).");
+        console.log("SP3CTR Script Loaded (v5.3 - Final Stable Build).");
 
         // --- Global State and Constants ---
         const WEBSOCKET_URL = "ws://localhost:8765";
         let socket;
         let isCapturing = false; 
-        let packetsBufferedCount = 0; 
-
+        let packetsBufferedCount = 0;
+        let isLoadingFile = false; 
+        let currentFilterText = "";
+        const FILTER_COLUMN_INDICES = { SRC_IP: 1, DEST_IP: 2, PROTOCOL: 3, INFO: 5 };
+        
         // --- DOM Element References ---
-        const captureStatusEl = document.getElementById('capture-status');
-        const statusIndicatorLightEl = document.getElementById('status-indicator-light');
-        const networkInterfaceSelect = document.getElementById('network-interface');
-        const startCaptureBtn = document.getElementById('start-capture-btn'); 
-        const stopCaptureBtn = document.getElementById('stop-capture-btn'); 
-        const saveCaptureBtn = document.getElementById('save-capture-btn'); 
-        const packetTableBody = document.getElementById('packet-table-body'); 
-        const noPacketsRow = document.getElementById('no-packets-row');     
-        const detailPanel = document.getElementById('detail-panel');
-        const detailContent = document.getElementById('detail-content');
-        const closeDetailBtn = document.getElementById('close-detail-btn');
-        const mainContent = document.getElementById('main-content');
+        const allElements = {
+            captureStatus: document.getElementById('capture-status'), statusIndicatorLight: document.getElementById('status-indicator-light'),
+            networkInterfaceSelect: document.getElementById('network-interface'),
+            startCaptureBtn: document.getElementById('start-capture-btn'), stopCaptureBtn: document.getElementById('stop-capture-btn'),
+            saveCaptureBtn: document.getElementById('save-capture-btn'), loadPcapBtn: document.getElementById('load-pcap-btn'),
+            packetTableBody: document.getElementById('packet-table-body'), noPacketsRow: document.getElementById('no-packets-row'),
+            detailPanel: document.getElementById('detail-panel'), detailContent: document.getElementById('detail-content'),
+            closeDetailBtn: document.getElementById('close-detail-btn'), mainContent: document.getElementById('main-content'),
+            pcapModalOverlay: document.getElementById('pcap-modal-overlay'), pcapFileList: document.getElementById('pcap-file-list'),
+            closePcapModalBtn: document.getElementById('close-pcap-modal-btn'), filterInput: document.getElementById('filter-input'),
+            applyFilterBtn: document.getElementById('apply-filter-btn'), clearFilterBtn: document.getElementById('clear-filter-btn'),
+            toastContainer: document.getElementById('toast-container')
+        };
 
-        // --- Initialization ---
+        // --- Core Initialization ---
         function initialize() {
             connectWebSocket();
             setupEventListeners();
             updateButtonStates(); 
         }
 
-        // --- WebSocket Connection & Message Handling (Fully Defined) ---
+        // --- WebSocket Connection & Message Handling ---
         function connectWebSocket() {
             updateStatusDisplay("Attempting WebSocket connection...");
-            try {
-                socket = new WebSocket(WEBSOCKET_URL);
-            } catch (e) { 
-                console.error("CRITICAL ERROR CREATING WebSocket object:", e);
-                updateStatusDisplay(`Error creating WebSocket: ${e.message || 'Unknown error'}`, true);
-                disableAllControls();
-                return;
-            }
-            socket.onopen = () => {
-                console.log("WebSocket.onopen event FIRED.");
-                updateStatusDisplay("WebSocket Connected. Waiting for interfaces.", false, true);
-            };
-            socket.onmessage = (event) => {
-                try {
-                    const msg = JSON.parse(event.data);
-                    handleServerMessage(msg); 
-                } catch (e) { console.error("Error parsing message:", e, "Raw data:", event.data); }
-            };
-            socket.onerror = (errorEvent) => { 
-                console.error("WebSocket.onerror event FIRED.", errorEvent);
-                updateStatusDisplay("WebSocket Connection Error. Check console.", true);
-                disableAllControls(); 
-            };
-            socket.onclose = (closeEvent) => { 
-                console.log("WebSocket.onclose event FIRED. Code:", closeEvent.code);
-                updateStatusDisplay(`WebSocket Disconnected (Code: ${closeEvent.code})`, true);
-                isCapturing = false; 
-                packetsBufferedCount = 0;
-                disableAllControls(); 
-            };
+            try { socket = new WebSocket(WEBSOCKET_URL); } catch (e) { console.error("CRITICAL ERROR CREATING WebSocket object:", e); updateStatusDisplay(`Error: ${e.message}`, true); disableAllControls(); return; }
+            socket.onopen = () => { console.log("WebSocket.onopen"); updateStatusDisplay("Connected. Waiting for interfaces.", false, true); };
+            socket.onmessage = (event) => { try { handleServerMessage(JSON.parse(event.data)); } catch (e) { console.error("Parse Error:", e); } };
+            socket.onerror = () => { console.error("WebSocket.onerror"); updateStatusDisplay("Connection Error.", true); disableAllControls(); };
+            socket.onclose = () => { console.log("WebSocket.onclose"); updateStatusDisplay("Disconnected.", true); isCapturing = false; packetsBufferedCount = 0; isLoadingFile = false; disableAllControls(); };
         }
-
-        function sendCommand(commandObject) {
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify(commandObject));
-            } else { console.error("sendCommand: WebSocket not open."); }
-        }
-
+        function sendCommand(commandObject) { if (socket && socket.readyState === WebSocket.OPEN) { socket.send(JSON.stringify(commandObject)); } else { console.error("Socket not open."); } }
         function handleServerMessage(message) {
             switch (message.type) {
                 case "interfaces": populateNetworkInterfaces(message.data); break;
-                case "packet_summary": 
-                    addPacketToDisplay(message.data); 
-                    packetsBufferedCount++; 
-                    break;
+                case "packet_summary": addPacketToDisplay(message.data); packetsBufferedCount++; break;
                 case "packet_details": displayPacketDetails(message.data); break;
+                case "pcap_list": populatePcapModal(message.data); break;
                 case "status":
                     updateStatusDisplay(message.message, false, true, message.message.toLowerCase().includes("capture started"));
+                    if (message.message.toLowerCase().includes("finished loading")) isLoadingFile = false;
                     isCapturing = message.message.toLowerCase().includes("capture started");
-                    const match = message.message.match(/(\d+) packets buffered/);
-                    if (match) packetsBufferedCount = parseInt(match[1], 10);
-                    else if (!isCapturing) packetsBufferedCount = 0;
+                    const match = message.message.match(/(\d+) packets (buffered|loaded)/);
+                    if (match) packetsBufferedCount = parseInt(match[1], 10); 
+                    else if (!isCapturing && !isLoadingFile) packetsBufferedCount = 0;
                     updateButtonStates(); 
                     break;
-                case "error": 
-                    console.error("Server Error:", message.message);
-                    updateStatusDisplay(`Error: ${message.message}`, true);
-                    updateButtonStates();
-                    break;
+                case "error": isLoadingFile = false; updateButtonStates(); showToast(message.message, 'error'); break;
                 default: console.warn("Unknown message type:", message.type);
             }
         }
         
-        // --- UI & Display Functions (Fully Defined) ---
-        function updateStatusDisplay(message, isError = false, isConnected = false, isActivelyCapturing = false) {
-            if (captureStatusEl) captureStatusEl.textContent = `Status: ${message}`;
-            if (statusIndicatorLightEl) {
-                if (isError) statusIndicatorLightEl.className = 'status-indicator status-stopped'; 
-                else if (isActivelyCapturing) statusIndicatorLightEl.className = 'status-indicator status-capturing';
-                else if (isConnected) statusIndicatorLightEl.className = 'status-indicator status-stopped'; 
-                else statusIndicatorLightEl.className = 'status-indicator status-connecting'; 
-            }
-        }
-
+        // --- UI Update & Display Functions ---
+        function updateStatusDisplay(message, isError = false, isConnected = false, isActivelyCapturing = false) { if (allElements.captureStatus) allElements.captureStatus.textContent = `Status: ${message}`; if (allElements.statusIndicatorLight) { if (isError) allElements.statusIndicatorLight.className = 'status-indicator status-stopped'; else if (isActivelyCapturing) allElements.statusIndicatorLight.className = 'status-indicator status-capturing'; else if (isConnected) allElements.statusIndicatorLight.className = 'status-indicator status-stopped'; else allElements.statusIndicatorLight.className = 'status-indicator status-connecting'; } }
         function updateButtonStates() {
-            const hasValidInterfaceSelected = networkInterfaceSelect.value !== "" && networkInterfaceSelect.options.length > 0 && networkInterfaceSelect.options[0].value !== ""; 
+            const hasInterfaces = allElements.networkInterfaceSelect.options.length > 0 && allElements.networkInterfaceSelect.options[0].value !== "";
             if (socket && socket.readyState === WebSocket.OPEN) {
+                if (isLoadingFile) { disableAllControls(true); return; }
                 if (isCapturing) {
-                    startCaptureBtn.disabled = true; stopCaptureBtn.disabled = false; saveCaptureBtn.disabled = true; 
-                    startCaptureBtn.classList.add('btn-disabled'); stopCaptureBtn.classList.remove('btn-disabled'); saveCaptureBtn.classList.add('btn-disabled');
-                    networkInterfaceSelect.disabled = true;
+                    allElements.startCaptureBtn.disabled = true; allElements.stopCaptureBtn.disabled = false; allElements.saveCaptureBtn.disabled = true; allElements.loadPcapBtn.disabled = true;
                 } else { 
-                    startCaptureBtn.disabled = !hasValidInterfaceSelected;
-                    startCaptureBtn.classList.toggle('btn-disabled', !hasValidInterfaceSelected);
-                    stopCaptureBtn.disabled = true; stopCaptureBtn.classList.add('btn-disabled');
-                    saveCaptureBtn.disabled = !(packetsBufferedCount > 0); 
-                    saveCaptureBtn.classList.toggle('btn-disabled', !(packetsBufferedCount > 0));
-                    networkInterfaceSelect.disabled = false; 
+                    allElements.startCaptureBtn.disabled = !hasInterfaces;
+                    allElements.stopCaptureBtn.disabled = true; 
+                    allElements.saveCaptureBtn.disabled = !(packetsBufferedCount > 0); 
+                    allElements.loadPcapBtn.disabled = false; 
                 }
+                [allElements.startCaptureBtn, allElements.stopCaptureBtn, allElements.saveCaptureBtn, allElements.loadPcapBtn].forEach(btn => btn.classList.toggle('btn-disabled', btn.disabled));
+                allElements.networkInterfaceSelect.disabled = isCapturing;
             } else { disableAllControls(); }
         }
+        function populateNetworkInterfaces(interfaces) { const select = allElements.networkInterfaceSelect; if (!select) return; select.innerHTML = ''; if (interfaces && Array.isArray(interfaces) && interfaces.length > 0) { interfaces.forEach(iface => { if (iface && iface.id && iface.name) { const option = document.createElement('option'); option.value = iface.id; option.textContent = iface.name; select.appendChild(option); } }); if (select.options.length > 0) { select.selectedIndex = 0; select.disabled = false; updateStatusDisplay(`Interfaces loaded. Ready.`, false, true); } else { select.innerHTML = '<option value="">No valid interfaces.</option>'; select.disabled = true; updateStatusDisplay("No valid interfaces found.", true); } } else { select.innerHTML = '<option value="">No interfaces from server.</option>'; select.disabled = true; updateStatusDisplay("Failed to load interfaces.", true); } updateButtonStates(); }
+        function addPacketToDisplay(packetData) { if (allElements.noPacketsRow) allElements.noPacketsRow.style.display = 'none'; const row = allElements.packetTableBody.insertRow(0); row.className = 'packet-row cursor-pointer'; row.dataset.packetIndex = packetData.index; const createCell = (text, ...classes) => { const cell = row.insertCell(); cell.className = `p-2 border-b border-gray-700 text-xs ${classes.join(' ')}`; cell.textContent = String(text ?? "N/A"); return cell; }; createCell(packetData.timestamp); createCell(packetData.srcIp, 'font-mono'); createCell(packetData.destIp, 'font-mono'); const protoCell = createCell(packetData.protocol); if (packetData.protocol) { if (packetData.protocol === 'TCP') protoCell.classList.add('text-blue-400'); else if (packetData.protocol === 'UDP') protoCell.classList.add('text-purple-400'); else if (packetData.protocol === 'ICMP') protoCell.classList.add('text-red-400'); else if (packetData.protocol === 'DNS') protoCell.classList.add('text-green-400'); } createCell(packetData.length); const infoCell = createCell(packetData.info, 'truncate'); infoCell.title = packetData.info; if (currentFilterText !== "") { let rowMatches = [...row.cells].some(cell => cell.textContent.toLowerCase().includes(currentFilterText)); row.style.display = rowMatches ? '' : 'none'; } const maxRows = 200; if (allElements.packetTableBody.rows.length > maxRows + 1) { for (let i = allElements.packetTableBody.rows.length - 1; i >= 0; i--) { if (allElements.packetTableBody.rows[i].id !== 'no-packets-row') { allElements.packetTableBody.deleteRow(i); break; } } } }
+        function displayPacketDetails(details) { allElements.detailContent.innerHTML = ''; if (!details || !Array.isArray(details) || details.length === 0) { allElements.detailContent.innerHTML = '<p class="text-gray-500">No detailed layer information available.</p>'; return; } details.forEach(layer => { const layerDiv = document.createElement('div'); layerDiv.className = 'detail-layer'; const header = document.createElement('div'); header.className = 'detail-layer-header'; header.textContent = layer.layer_name || 'Unnamed Layer'; const content = document.createElement('div'); content.className = 'detail-layer-content'; header.onclick = () => content.style.display = content.style.display === 'none' ? 'block' : 'none'; let hasFields = false; if(layer.fields) { for (const [key, value] of Object.entries(layer.fields)) { hasFields = true; const fieldDiv = document.createElement('div'); fieldDiv.className = 'detail-field'; fieldDiv.innerHTML = `<span class="detail-field-key">${key}</span><span class="detail-field-value">${String(value ?? 'N/A')}</span>`; content.appendChild(fieldDiv); } } if (!hasFields) { content.innerHTML = '<p class="text-gray-400 text-sm">No fields to show.</p>'; } layerDiv.appendChild(header); layerDiv.appendChild(content); allElements.detailContent.appendChild(layerDiv); }); }
+        function populatePcapModal(fileList) { allElements.pcapFileList.innerHTML = ''; if (fileList && fileList.length > 0) { fileList.forEach(filename => { const li = document.createElement('li'); li.textContent = filename; li.dataset.filename = filename; allElements.pcapFileList.appendChild(li); }); } else { allElements.pcapFileList.innerHTML = '<li>No saved capture files found.</li>'; } allElements.pcapModalOverlay.classList.remove('hidden'); }
+        function showToast(message, type = 'info') { if (!allElements.toastContainer) return; const toast = document.createElement('div'); toast.className = `toast toast-${type}`; toast.textContent = message; allElements.toastContainer.appendChild(toast); setTimeout(() => { toast.remove(); }, 3900); }
 
-        function populateNetworkInterfaces(interfaces) { 
-            if (!networkInterfaceSelect) return;
-            networkInterfaceSelect.innerHTML = ''; 
-            if (interfaces && Array.isArray(interfaces) && interfaces.length > 0) {
-                interfaces.forEach(iface => {  
-                    if (iface && iface.id && iface.name) {
-                        const option = document.createElement('option');
-                        option.value = iface.id; 
-                        option.textContent = iface.name; 
-                        networkInterfaceSelect.appendChild(option);
-                    }
-                });
-                if (networkInterfaceSelect.options.length > 0) {
-                    networkInterfaceSelect.selectedIndex = 0; 
-                    networkInterfaceSelect.disabled = false; 
-                    updateStatusDisplay(`Interfaces loaded. Ready.`, false, true);
-                } else {
-                    networkInterfaceSelect.innerHTML = '<option value="">No valid interfaces.</option>';
-                    networkInterfaceSelect.disabled = true;
-                    updateStatusDisplay("No valid interfaces found.", true);
-                }
-            } else {
-                networkInterfaceSelect.innerHTML = '<option value="">No interfaces from server.</option>';
-                networkInterfaceSelect.disabled = true;
-                updateStatusDisplay("Failed to load interfaces.", true);
-            }
-            updateButtonStates(); 
-        }
-
-        function addPacketToDisplay(packetData) { 
-            if (noPacketsRow) noPacketsRow.style.display = 'none'; 
-            const row = packetTableBody.insertRow(0); 
-            row.className = 'packet-row cursor-pointer'; 
-            row.dataset.packetIndex = packetData.index; 
-            const createCell = (text, ...classes) => {
-                const cell = row.insertCell();
-                cell.className = `p-2 border-b border-gray-700 text-xs ${classes.join(' ')}`;
-                cell.textContent = String(text ?? "N/A"); 
-                return cell;
-            };
-            createCell(packetData.timestamp);
-            createCell(packetData.srcIp, 'font-mono'); 
-            createCell(packetData.destIp, 'font-mono'); 
-            const protoCell = createCell(packetData.protocol); 
-            if (packetData.protocol) { /* ... protocol coloring ... */ }
-            createCell(packetData.length); 
-            const infoCell = createCell(packetData.info, 'truncate'); 
-            infoCell.title = packetData.info; 
-            const maxRows = 200; 
-            if (packetTableBody.rows.length > maxRows + 1) { 
-                for (let i = packetTableBody.rows.length - 1; i >= 0; i--) {
-                    if (packetTableBody.rows[i].id !== 'no-packets-row') {
-                        packetTableBody.deleteRow(i);
-                        break; 
-                    }
-                }
-            }
-        }
-        
-        function displayPacketDetails(details) {
-            detailContent.innerHTML = ''; 
-            if (!details || !Array.isArray(details) || details.length === 0) {
-                detailContent.innerHTML = '<p class="text-gray-500">No detailed layer information available for this packet.</p>';
-                return;
-            }
-            details.forEach(layer => {
-                const layerDiv = document.createElement('div');
-                layerDiv.className = 'detail-layer';
-                const header = document.createElement('div');
-                header.className = 'detail-layer-header';
-                header.textContent = layer.layer_name || 'Unnamed Layer';
-                const content = document.createElement('div');
-                content.className = 'detail-layer-content';
-                header.onclick = () => content.style.display = content.style.display === 'none' ? 'block' : 'none';
-                let hasFields = false;
-                if(layer.fields) {
-                    for (const [key, value] of Object.entries(layer.fields)) {
-                        hasFields = true;
-                        const fieldDiv = document.createElement('div');
-                        fieldDiv.className = 'detail-field';
-                        fieldDiv.innerHTML = `<span class="detail-field-key">${key}</span><span class="detail-field-value">${String(value ?? 'N/A')}</span>`;
-                        content.appendChild(fieldDiv);
-                    }
-                }
-                if (!hasFields) { content.innerHTML = '<p class="text-gray-400 text-sm">No fields to show.</p>'; }
-                layerDiv.appendChild(header);
-                layerDiv.appendChild(content);
-                detailContent.appendChild(layerDiv);
-            });
-        }
-        
-        // --- Event Handlers (Fully Defined) ---
-        function handleStartCapture() {
-            const selectedInterface = networkInterfaceSelect.value;
-            if (!selectedInterface) { return; }
-            const packetRows = packetTableBody.querySelectorAll('tr:not(#no-packets-row)');
-            packetRows.forEach(row => row.remove());
-            if (noPacketsRow) { noPacketsRow.cells[0].textContent = "Capture started..."; noPacketsRow.style.display = 'table-row'; }
-            sendCommand({ command: "start_capture", interface: selectedInterface });
-            packetsBufferedCount = 0; 
-        }
-
+        // --- Event Handlers ---
+        function handleStartCapture() { const selectedInterface = allElements.networkInterfaceSelect.value; if (!selectedInterface) return; const packetRows = allElements.packetTableBody.querySelectorAll('tr:not(#no-packets-row)'); packetRows.forEach(row => row.remove()); if (allElements.noPacketsRow) { allElements.noPacketsRow.cells[0].textContent = `Capture started...`; allElements.noPacketsRow.style.display = 'table-row'; } sendCommand({ command: "start_capture", interface: selectedInterface }); packetsBufferedCount = 0; allElements.filterInput.value = ""; applyCurrentFilter(); }
         function handleStopCapture() { sendCommand({ command: "stop_capture" }); }
-        function handleSaveCapture() {
-            if (isCapturing || packetsBufferedCount === 0) return;
-            sendCommand({ command: "save_capture" });
-        }
+        function handleSaveCapture() { if (!isCapturing && packetsBufferedCount > 0) sendCommand({ command: "save_capture" }); }
+        function handleLoadPcap() { if (!isCapturing) sendCommand({ command: "get_pcap_list" }); }
+        function handlePcapFileSelect(event) { if (event.target && event.target.dataset.filename) { const filename = event.target.dataset.filename; const packetRows = allElements.packetTableBody.querySelectorAll('tr:not(#no-packets-row)'); packetRows.forEach(row => row.remove()); if (allElements.noPacketsRow) { allElements.noPacketsRow.cells[0].textContent = `Loading ${filename}...`; allElements.noPacketsRow.style.display = 'table-row'; } isLoadingFile = true; updateButtonStates(); sendCommand({ command: "load_pcap_file", "filename": filename }); allElements.pcapModalOverlay.classList.add('hidden'); } }
+        function handleRowClick(event) { let targetRow = event.target.closest('tr.packet-row'); if (targetRow && targetRow.dataset.packetIndex !== undefined) { const packetIndex = targetRow.dataset.packetIndex; const currentlySelected = document.querySelector('.packet-row.selected'); if (currentlySelected) currentlySelected.classList.remove('selected'); targetRow.classList.add('selected'); sendCommand({ command: "get_packet_details", index: packetIndex }); allElements.detailPanel.classList.add('visible'); allElements.mainContent.classList.add('md:w-3/5', 'lg:w-2/3', 'xl:w-3/4'); } }
+        function applyCurrentFilter() { currentFilterText = allElements.filterInput.value.trim().toLowerCase(); let visibleRowCount = 0; let hasPacketRows = false; for (let row of allElements.packetTableBody.rows) { if (row.id === 'no-packets-row') continue; hasPacketRows = true; let rowMatches = currentFilterText === "" ? true : [...row.cells].some(cell => cell.textContent.toLowerCase().includes(currentFilterText)); row.style.display = rowMatches ? '' : 'none'; if (rowMatches) visibleRowCount++; } if (allElements.noPacketsRow) { if (hasPacketRows && visibleRowCount === 0) { allElements.noPacketsRow.cells[0].textContent = `No packets match filter: "${allElements.filterInput.value.trim()}"`; allElements.noPacketsRow.style.display = 'table-row'; } else { allElements.noPacketsRow.style.display = hasPacketRows ? 'none' : 'table-row'; if(!hasPacketRows) allElements.noPacketsRow.cells[0].textContent = 'No packets to display.'; } } }
+        function handleClearFilter() { allElements.filterInput.value = ""; applyCurrentFilter(); }
         
-        function handleRowClick(event) {
-            let targetRow = event.target.closest('tr.packet-row');
-            if (targetRow && targetRow.dataset.packetIndex !== undefined) {
-                const packetIndex = targetRow.dataset.packetIndex;
-                const currentlySelected = document.querySelector('.packet-row.selected');
-                if (currentlySelected) currentlySelected.classList.remove('selected');
-                targetRow.classList.add('selected');
-                sendCommand({ command: "get_packet_details", index: packetIndex });
-                detailPanel.classList.add('visible');
-                mainContent.classList.add('md:w-3/5', 'lg:w-2/3', 'xl:w-3/4'); 
-            }
-        }
-
         // --- Initial Setup ---
         function setupEventListeners() { 
-            startCaptureBtn.addEventListener('click', handleStartCapture);
-            stopCaptureBtn.addEventListener('click', handleStopCapture);
-            saveCaptureBtn.addEventListener('click', handleSaveCapture); 
-            packetTableBody.addEventListener('click', handleRowClick); 
-            closeDetailBtn.addEventListener('click', () => {
-                detailPanel.classList.remove('visible');
-                mainContent.classList.remove('md:w-3/5', 'lg:w-2/3', 'xl:w-3/4'); 
-                const currentlySelected = document.querySelector('.packet-row.selected');
-                if (currentlySelected) currentlySelected.classList.remove('selected');
-                detailContent.innerHTML = '<p class="text-gray-500">Click on a packet to see details.</p>';
-            });
-            networkInterfaceSelect.addEventListener('change', updateButtonStates); 
+            const listeners = {
+                'start-capture-btn': handleStartCapture, 'stop-capture-btn': handleStopCapture,
+                'save-capture-btn': handleSaveCapture, 'load-pcap-btn': handleLoadPcap,
+                'packet-table-body': handleRowClick, 'close-detail-btn': () => {
+                    allElements.detailPanel.classList.remove('visible');
+                    allElements.mainContent.classList.remove('md:w-3/5', 'lg:w-2/3', 'xl:w-3/4');
+                    const sel = document.querySelector('.packet-row.selected'); if (sel) sel.classList.remove('selected');
+                },
+                'close-pcap-modal-btn': () => allElements.pcapModalOverlay.classList.add('hidden'),
+                'pcap-file-list': handlePcapFileSelect,
+                'apply-filter-btn': applyCurrentFilter, 'clear-filter-btn': handleClearFilter,
+                'network-interface': updateButtonStates
+            };
+            for (const [id, handler] of Object.entries(listeners)) { if (document.getElementById(id)) {
+                if(id === 'network-interface') document.getElementById(id).addEventListener('change', handler);
+                else document.getElementById(id).addEventListener('click', handler);
+            }}
+            allElements.filterInput.addEventListener('keypress', (event) => { if (event.key === 'Enter') applyCurrentFilter(); });
         }
 
-        function disableAllControls() {
-            const elements = [startCaptureBtn, stopCaptureBtn, saveCaptureBtn, networkInterfaceSelect];
-            elements.forEach(el => { if (el) { el.disabled = true; if (el.tagName === 'BUTTON') el.classList.add('btn-disabled'); }});
+        function disableAllControls(keepLoadButtonEnabled = false) {
+            const elementsToDisable = [allElements.startCaptureBtn, allElements.stopCaptureBtn, allElements.saveCaptureBtn, allElements.networkInterfaceSelect, allElements.applyFilterBtn, allElements.clearFilterBtn];
+            if (!keepLoadButtonEnabled) elementsToDisable.push(allElements.loadPcapBtn);
+            elementsToDisable.forEach(el => { if (el) { el.disabled = true; if (el.tagName === 'BUTTON') el.classList.add('btn-disabled'); }});
+            if(allElements.filterInput) allElements.filterInput.disabled = true;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const allElementsPresent = [captureStatusEl, statusIndicatorLightEl, networkInterfaceSelect, 
-                startCaptureBtn, stopCaptureBtn, saveCaptureBtn, packetTableBody, noPacketsRow, 
-                detailPanel, detailContent, closeDetailBtn, mainContent].every(el => el !== null);
-            
-            if (allElementsPresent) {
+            const missingElements = Object.entries(allElements).filter(([_, el]) => el === null).map(([key]) => key);
+            if (missingElements.length === 0) {
                 initialize(); 
             } else { 
-                console.error("One or more crucial UI elements are missing. Cannot initialize.");
+                console.error("Crucial UI elements missing:", missingElements.join(", "), ". Cannot initialize.");
+                alert("Fatal Error: UI elements missing. Check console for details.");
             }
         });
     </script>
