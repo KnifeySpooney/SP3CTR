@@ -25,24 +25,25 @@ Our goal is to build SP3CTR into an indispensable tool for cybersecurity hobbyis
 
 Our development will proceed in phases, incrementally adding features and refining the user experience.
 
-### Phase 1: Enhancing Core Functionality & User Experience (Est. v0.2 – v0.4)
+### Phase 1: Enhancing Core Functionality & User Experience (Est. v0.2 – v0.5)
 
 Focused on making the current tool more robust, user-friendly, and capable for basic analysis.
 
-#### 💾 Save & Load Captures - 50 % Complete
+#### 💾 Save & Load Captures ✅ - 100 % Complete 
 
 - Implement functionality to save captured packets to PCAP files  ✅
-- Allow loading and analyzing existing PCAP files within SP3CTR's interface  
+- Allow loading and analyzing existing PCAP files within SP3CTR's interface  ✅
 
 #### 📚 Enhanced Packet Detail View - 50% Complete
 
 - Provide a dedicated panel to show more detailed, human-readable information about a selected packet  ✅
-- Include tooltips ❓ to explain common networking terms and abbreviations directly in the UI  
+- Include tooltips ❓ to explain common networking terms and abbreviations directly in the UI  - In Production
 
 #### 🎨 UI Polish & Refinements
 
 - Introduce more intuitive icons for protocols and actions  
-- Refine the layout for better readability and information hierarchy  
+- Refine the layout for better readability and information hierarchy ✅
+- Glassmorphism UI - In Production
 
 #### 🔍 Advanced Basic Filtering - 50 % Complete
 
@@ -51,7 +52,7 @@ Focused on making the current tool more robust, user-friendly, and capable for b
 
 ---
 
-### Phase 2: Introducing Basic Threat Recognition & "Spectral" Visuals (Est. v0.5 – v0.7)
+### Phase 2: Introducing Basic Threat Recognition & "Spectral" Visuals (Est. v0.6 – v0.7)
 
 This phase brings SP3CTR's unique value: visual context and meaningful alerts.
 
