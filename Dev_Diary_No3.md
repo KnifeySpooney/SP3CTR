@@ -5,7 +5,7 @@
 
 💥 **Build Status:** Functioning with all the reliability of a chocolate teapot and twice the spite.
 
-🧠 **Mood:** Oscillating between "Maybe I actually know what I'm doing" and "I should have become a barista like my mother suggested."
+🧠 **Mood:** Oscillating between "Maybe I actually know what I'm doing" and "I should have become a lawyer like my mother suggested."
 
 Fresh off yesterday's miraculous victory with the Packet Detail View, I experienced that dangerous emotion programmers call "confidence." It's like cocaine for developers—feels amazing, lasts about five minutes, and inevitably leads to poor life choices.
 
