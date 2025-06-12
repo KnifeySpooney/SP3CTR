@@ -1,69 +1,91 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark"> <!-- Start in dark mode by default -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SP3CTR Frontend - 0.3.1 "Galiano"</title>
+    <title>SP3CTR v0.5.8</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tippy.js Libraries -->
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <script src="https://unpkg.com/tippy.js@6"></script>
+    <script>
+        // Set up Tailwind for class-based dark mode
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #1a202c; color: #e2e8f0; overflow-x: hidden; } 
+        /* A subtle gradient background to make the glass effect pop */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            @apply bg-slate-100 text-slate-800 dark:bg-black dark:text-slate-200; /* Darker base */
+            background-image: radial-gradient(circle at top left, rgba(200, 200, 255, 0.1), transparent 30%), radial-gradient(circle at bottom right, rgba(200, 200, 255, 0.1), transparent 40%);
+        } 
+        .dark body {
+             /* More subtle, textured gradient for dark mode */
+             background-image: radial-gradient(ellipse 50% 50% at 10% 20%, rgba(56, 189, 248, 0.1), transparent 40%), radial-gradient(ellipse 50% 50% at 90% 80%, rgba(99, 102, 241, 0.08), transparent 50%);
+        }
         select {             
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
             background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em;
             padding-right: 2.5rem; -webkit-appearance: none; -moz-appearance: none; appearance: none; 
         }
-        .btn { @apply px-4 py-2 rounded-md font-semibold transition-all duration-150 ease-in-out shadow-md; }
-        .btn-start { @apply bg-green-500 hover:bg-green-600 text-white; }
-        .btn-stop { @apply bg-red-500 hover:bg-red-600 text-white; }
-        .btn-save { @apply bg-sky-500 hover:bg-sky-600 text-white; }
-        .btn-load { @apply bg-teal-500 hover:bg-teal-600 text-white; }
-        .btn-filter { @apply bg-indigo-500 hover:bg-indigo-600 text-white; }
-        .btn-clear-filter { @apply bg-gray-500 hover:bg-gray-600 text-white; }
-        .btn-disabled { @apply bg-gray-600 text-gray-400 cursor-not-allowed pointer-events-none; }
+        .btn { @apply px-4 py-2 rounded-md font-semibold transition-all duration-150 ease-in-out shadow-lg border; } 
+        .btn-start { @apply bg-green-500/80 border-green-400/50 hover:bg-green-600 text-white; }
+        .btn-stop { @apply bg-red-500/80 border-red-400/50 hover:bg-red-600 text-white; }
+        .btn-save { @apply bg-sky-500/80 border-sky-400/50 hover:bg-sky-600 text-white; }
+        .btn-load { @apply bg-teal-500/80 border-teal-400/50 hover:bg-teal-600 text-white; }
+        .btn-filter { @apply bg-indigo-500/80 border-indigo-400/50 hover:bg-indigo-600 text-white; }
+        .btn-clear-filter { @apply bg-gray-500/80 border-gray-400/50 hover:bg-gray-600 text-white; }
+        .btn-disabled { @apply bg-gray-500/60 dark:bg-gray-700/60 text-gray-400 border-gray-600/50 cursor-not-allowed pointer-events-none; }
         .table-fixed-layout { table-layout: fixed; }
         #detail-panel { transition: transform 0.3s ease-in-out; transform: translateX(100%); }
         #detail-panel.visible { transform: translateX(0); }
-        .packet-row.selected { background-color: #3f628e; }
-        .packet-row:hover { background-color: #2d3748; }
-        .packet-row { cursor: pointer; }
-        .detail-layer { border: 1px solid #4a5568; border-radius: 0.5rem; margin-bottom: 0.75rem; background-color: #2d3748; }
-        .detail-layer-header { background-color: #4a5568; padding: 0.5rem 0.75rem; font-weight: bold; cursor: pointer; }
-        .detail-layer-content { padding: 0.75rem; max-height: 500px; overflow-y: auto; }
-        .detail-field { display: grid; grid-template-columns: minmax(100px, 1fr) 2fr; gap: 0.75rem; border-bottom: 1px solid #4a5568; padding: 0.25rem 0; font-size: 0.8rem; }
-        .detail-field-key { color: #90cdf4; font-family: monospace; word-break: break-all; }
+        .packet-row.selected { @apply bg-sky-300/20 dark:bg-sky-500/30 !important; } 
+        .packet-row:hover { @apply bg-slate-200/50 dark:bg-slate-800/80; }
+        .packet-row { cursor: pointer; } 
+        .detail-layer-header { cursor: pointer; }
+        #pcap-modal-overlay { @apply fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50; } 
+        .filter-btn.active { @apply bg-violet-400 text-slate-800 font-bold border-violet-500; }
+        .detail-field { display: grid; grid-template-columns: minmax(100px, 1fr) 2fr; gap: 0.75rem; @apply border-b border-slate-300 dark:border-slate-700; padding: 0.25rem 0; font-size: 0.8rem; }
+        .detail-field-key { @apply text-sky-600 dark:text-sky-400; font-family: monospace; word-break: break-all; }
         .detail-field-value { font-family: monospace; word-break: break-all; }
         .status-indicator { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; }
         .status-capturing { background-color: #34d399; animation: pulse-green 1.5s infinite; }
         .status-stopped { background-color: #ef4444; }
         .status-connecting { background-color: #f59e0b; animation: pulse-amber 1.5s infinite; }
-        #pcap-modal-overlay { @apply fixed inset-0 bg-black bg-opacity-75 backdrop-blur-sm flex items-center justify-center z-50; }
-        #pcap-modal-content { @apply bg-gray-800 rounded-lg shadow-xl p-6 w-11/12 md:w-1/2 lg:w-1/3; }
-        #pcap-file-list li { @apply p-2 rounded-md hover:bg-gray-700 text-sm; cursor: pointer; }
+        .tippy-box[data-theme~='sp3ctr-glass'] { @apply bg-slate-700/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-200 dark:text-slate-200 border border-slate-600/50 rounded-md; }
+        .tippy-box[data-theme~='sp3ctr-glass'][data-placement^='top'] > .tippy-arrow::before { @apply border-t-slate-700/80 dark:border-t-slate-800/80; }
+        .tippy-box[data-theme~='sp3ctr-glass'][data-placement^='bottom'] > .tippy-arrow::before { @apply border-b-slate-700/80 dark:border-b-slate-800/80; }
         @keyframes pulse-green { 0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(52, 211, 153, 0); } 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); } }
         @keyframes pulse-amber { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
         .toast { @apply fixed bottom-5 right-5 p-3 rounded-md shadow-lg text-sm z-50; animation: fadeInOutToast 4s ease-in-out forwards; }
-        .toast-error { @apply bg-red-600 text-white; }
-        .toast-info { @apply bg-sky-600 text-white; }
-        .toast-success { @apply bg-green-600 text-white; }
+        .toast-error { @apply bg-red-600 text-white; } .toast-info { @apply bg-sky-600 text-white; } .toast-success { @apply bg-green-600 text-white; }
         @keyframes fadeInOutToast { 0% { opacity: 0; transform: translateY(20px); } 10% { opacity: 1; transform: translateY(0); } 90% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(20px); } }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
 
-    <header class="bg-slate-800/70 backdrop-blur-lg p-4 shadow-lg border-b border-slate-700/50"> 
-        <h1 class="text-2xl font-bold text-sky-400 text-center">SP3CTR - 0.3.1 "Galiano"</h1>
+    <!-- *** Updated glass effect with darker slate and more opacity *** -->
+    <header class="bg-white/50 dark:bg-slate-900/75 backdrop-blur-lg p-4 shadow-lg border-b border-slate-300/50 dark:border-slate-700/50 flex justify-between items-center"> 
+        <div></div>
+        <h1 class="text-2xl font-bold text-sky-600 dark:text-sky-400 text-center">SP3CTR v0.5.8 "Denman"</h1>
+        <button id="theme-toggle" class="p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700">
+            <svg id="theme-icon-light" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            <svg id="theme-icon-dark" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+        </button>
     </header>
 
     <div class="flex flex-grow overflow-hidden relative">
         <div id="main-content" class="flex-grow flex flex-col p-4 gap-4 transition-all duration-300 w-full">
-            <section id="controls" class="bg-slate-800/70 backdrop-blur-lg p-4 rounded-lg shadow-md border border-slate-700/50">
+            <section id="controls" class="bg-white/30 dark:bg-slate-900/75 backdrop-blur-lg p-4 rounded-lg shadow-md border border-slate-300/50 dark:border-slate-700/50">
                 <div class="flex items-center mb-2">
                     <span id="status-indicator-light" class="status-indicator status-connecting"></span>
-                    <span id="capture-status" class="text-sm text-gray-400">Status: Initializing...</span>
+                    <span id="capture-status" class="text-sm text-slate-600 dark:text-gray-400">Status: Initializing...</span>
                 </div>
                 <div class="mb-4">
-                    <label for="network-interface" class="block text-sm font-medium text-gray-300 mb-1">Network Interface:</label>
-                    <select id="network-interface" class="w-full bg-gray-700/80 border border-gray-600 text-gray-200 rounded-md p-2" disabled>
+                    <label for="network-interface" class="block text-sm font-medium text-slate-600 dark:text-gray-300 mb-1">Network Interface:</label>
+                    <select id="network-interface" class="w-full bg-gray-200 dark:bg-slate-800/80 border border-gray-400 dark:border-gray-600 text-gray-800 dark:text-gray-200 rounded-md p-2" disabled>
                         <option value="">Awaiting WebSocket Connection...</option>
                     </select>
                 </div>
@@ -75,31 +97,39 @@
                 </div>
             </section>
 
-            <section id="filter-controls" class="bg-slate-800/70 backdrop-blur-lg p-3 rounded-lg shadow-md border border-slate-700/50">
+            <section id="filter-controls" class="bg-white/30 dark:bg-slate-900/75 backdrop-blur-lg p-3 rounded-lg shadow-md border border-slate-300/50 dark:border-slate-700/50">
                 <div class="flex flex-col sm:flex-row items-center gap-2">
-                    <label for="filter-input" class="text-sm font-medium text-gray-300 sm:mb-0">Filter:</label>
-                    <input type="text" id="filter-input" placeholder="IP, Protocol, Info..." class="flex-grow bg-gray-700/80 border border-gray-600 text-gray-200 rounded-md p-2 text-sm">
+                    <label for="filter-input" class="text-sm font-medium text-slate-600 dark:text-gray-300 sm:mb-0">Filter:</label>
+                    <input type="text" id="filter-input" placeholder="IP, Protocol, Info..." class="flex-grow bg-gray-200 dark:bg-slate-800/80 border border-gray-400 dark:border-gray-600 text-slate-800 dark:text-gray-200 rounded-md p-2 text-sm">
                     <button id="apply-filter-btn" class="btn btn-filter w-full sm:w-auto text-sm">Apply</button>
                     <button id="clear-filter-btn" class="btn btn-clear-filter w-full sm:w-auto text-sm">Clear</button>
                 </div>
+                <div id="predefined-filters" class="flex flex-wrap gap-2 mt-3">
+                    <button data-filter="" class="btn btn-clear-filter text-xs filter-btn active">All</button>
+                    <button data-filter="TCP" class="btn btn-filter text-xs filter-btn">TCP</button>
+                    <button data-filter="UDP" class="btn btn-filter text-xs filter-btn">UDP</button>
+                    <button data-filter="DNS" class="btn btn-filter text-xs filter-btn">DNS</button>
+                    <button data-filter="ICMP" class="btn btn-filter text-xs filter-btn">ICMP</button>
+                    <button data-filter="HTTP/S" class="btn btn-filter text-xs filter-btn">HTTP/S</button>
+                </div>
             </section>
 
-            <main id="packet-display-area" class="flex-grow bg-slate-800/70 backdrop-blur-lg rounded-lg shadow-inner overflow-x-auto border border-slate-700/50">
-                <div class="overflow-y-auto h-[calc(100vh-300px)]"> 
+            <main id="packet-display-area" class="flex-grow bg-white/30 dark:bg-slate-900/75 backdrop-blur-lg rounded-lg shadow-inner overflow-x-auto border border-slate-300/50 dark:border-slate-700/50">
+                <div class="overflow-y-auto h-[calc(100vh-400px)]"> 
                     <table class="min-w-full table-fixed-layout border-collapse">
-                        <thead class="sticky top-0 bg-slate-700/80 backdrop-blur-lg z-10">
+                        <thead class="sticky top-0 bg-slate-200/70 dark:bg-slate-800/80 backdrop-blur-lg z-10">
                             <tr>
-                                <th class="w-1/6 p-2 text-left text-sm font-semibold text-sky-300">Time</th>
-                                <th class="w-1/6 p-2 text-left text-sm font-semibold text-sky-300">Source IP</th>
-                                <th class="w-1/6 p-2 text-left text-sm font-semibold text-sky-300">Dest. IP</th>
-                                <th class="w-1/12 p-2 text-left text-sm font-semibold text-sky-300">Proto</th>
-                                <th class="w-1/12 p-2 text-left text-sm font-semibold text-sky-300">Length</th>
-                                <th class="w-1/3 p-2 text-left text-sm font-semibold text-sky-300">Info</th>
+                                <th class="w-1/6 p-2 text-left text-sm font-semibold text-sky-600 dark:text-sky-300">Time</th>
+                                <th class="w-1/6 p-2 text-left text-sm font-semibold text-sky-600 dark:text-sky-300">Source IP</th>
+                                <th class="w-1/6 p-2 text-left text-sm font-semibold text-sky-600 dark:text-sky-300">Dest. IP</th>
+                                <th class="w-1/12 p-2 text-left text-sm font-semibold text-sky-600 dark:text-sky-300">Proto</th>
+                                <th class="w-1/12 p-2 text-left text-sm font-semibold text-sky-600 dark:text-sky-300">Length</th>
+                                <th class="w-1/3 p-2 text-left text-sm font-semibold text-sky-600 dark:text-sky-300">Info</th>
                             </tr>
                         </thead>
-                        <tbody id="packet-table-body" class="divide-y divide-slate-700">
+                        <tbody id="packet-table-body" class="divide-slate-200 dark:divide-slate-800">
                             <tr id="no-packets-row">
-                                <td colspan="6" class="p-4 text-center text-gray-500">Select an interface and start capture to see packets.</td>
+                                <td colspan="6" class="p-4 text-center text-slate-500 dark:text-gray-500">Select an interface and start capture to see packets.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -107,21 +137,21 @@
             </main>
         </div>
 
-        <aside id="detail-panel" class="bg-slate-900/80 backdrop-blur-lg w-full md:w-2/5 lg:w-1/3 xl:w-1/4 h-full absolute top-0 right-0 shadow-2xl p-4 flex flex-col z-20 border-l-2 border-slate-700/50">
+        <aside id="detail-panel" class="bg-slate-200/70 dark:bg-slate-900/80 backdrop-blur-lg w-full md:w-2/5 lg:w-1/3 xl:w-1/4 h-full absolute top-0 right-0 shadow-2xl p-4 flex flex-col z-20 border-l-2 border-slate-300/50 dark:border-slate-700/50">
             <div class="flex justify-between items-center mb-4 flex-shrink-0">
-                <h2 class="text-lg font-bold text-sky-400">Packet Details</h2>
-                <button id="close-detail-btn" class="p-1 rounded-full text-2xl leading-none hover:bg-gray-700">&times;</button>
+                <h2 class="text-lg font-bold text-sky-600 dark:text-sky-400">Packet Details</h2>
+                <button id="close-detail-btn" class="p-1 rounded-full text-2xl leading-none hover:bg-slate-300 dark:hover:bg-gray-700">&times;</button>
             </div>
             <div id="detail-content" class="flex-grow overflow-y-auto">
-                <p class="text-gray-500">Click on a packet in the table to see its details here.</p>
+                <p class="text-slate-500 dark:text-gray-500">Click on a packet in the table to see its details here.</p>
             </div>
         </aside>
 
         <div id="pcap-modal-overlay" class="hidden">
-            <div id="pcap-modal-content" class="border border-slate-700/50">
+            <div id="pcap-modal-content" class="bg-white dark:bg-slate-800/90 border border-slate-300/50 dark:border-slate-700/50 rounded-lg">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold text-teal-400">Load Saved Capture</h2>
-                    <button id="close-pcap-modal-btn" class="p-1 rounded-full text-2xl leading-none hover:bg-gray-700">&times;</button>
+                    <h2 class="text-lg font-bold text-teal-500 dark:text-teal-400">Load Saved Capture</h2>
+                    <button id="close-pcap-modal-btn" class="p-1 rounded-full text-2xl leading-none hover:bg-slate-200 dark:hover:bg-gray-700">&times;</button>
                 </div>
                 <div id="pcap-file-list-container" class="max-h-64 overflow-y-auto">
                     <ul id="pcap-file-list"></ul>
@@ -132,21 +162,18 @@
     
     <div id="toast-container"></div>
 
-    <footer class="p-3 bg-slate-800/70 backdrop-blur-lg text-center text-xs text-gray-500 shadow-lg mt-auto border-t border-slate-700/50">
-        SP3CTR - Phase One Alpha-1
+    <footer class="p-3 bg-white/50 dark:bg-slate-900/75 backdrop-blur-lg text-center text-xs text-slate-600 dark:text-gray-500 shadow-lg mt-auto border-t border-slate-300/50 dark:border-slate-700/50">
+        SP3CTR (Denman) - Phase 1 Complete
     </footer>
-
-    <script>
-        console.log("SP3CTR Script Loaded (v5.3 - Final Stable Build).");
+   <script>
+        console.log("SP3CTR Script Loaded (v7.1 - Patched).");
 
         // --- Global State and Constants ---
         const WEBSOCKET_URL = "ws://localhost:8765";
-        let socket;
-        let isCapturing = false; 
-        let packetsBufferedCount = 0;
-        let isLoadingFile = false; 
-        let currentFilterText = "";
+        let socket; let isCapturing = false; let packetsBufferedCount = 0; let isLoadingFile = false; let currentFilterText = "";
         const FILTER_COLUMN_INDICES = { SRC_IP: 1, DEST_IP: 2, PROTOCOL: 3, INFO: 5 };
+        const tooltips = { 'Time': 'The timestamp when the packet was captured.', 'Source IP': 'The IP address where this packet originated.', 'Dest. IP': 'The destination IP address for this packet.', 'Proto': 'The primary protocol used (e.g., TCP, UDP, ICMP).', 'Length': 'The total length of the packet in bytes.', 'Info': 'A summary of the packet\'s contents or purpose.', 'TCP': 'Transmission Control Protocol', 'UDP': 'User Datagram Protocol', 'DNS': 'Domain Name System', 'ICMP': 'Internet Control Message Protocol', 'HTTP/S': 'Hypertext Transfer Protocol (Secure)', 'src': 'Source', 'dst': 'Destination', 'sport': 'Source Port', 'dport': 'Destination Port', 'len': 'Length', 'ttl': 'Time To Live', 'seq': 'Sequence Number', 'ack': 'Acknowledgement Number', 'flags': 'TCP Flags' };
+        const protocolIcons = { "TCP": "🔌", "UDP": "💧", "DNS": "🌐", "HTTP": "📄", "TLS": "🔒", "ICMP": "❗", "ARP": "🗺️", "DEFAULT": "❓" };
         
         // --- DOM Element References ---
         const allElements = {
@@ -160,17 +187,17 @@
             pcapModalOverlay: document.getElementById('pcap-modal-overlay'), pcapFileList: document.getElementById('pcap-file-list'),
             closePcapModalBtn: document.getElementById('close-pcap-modal-btn'), filterInput: document.getElementById('filter-input'),
             applyFilterBtn: document.getElementById('apply-filter-btn'), clearFilterBtn: document.getElementById('clear-filter-btn'),
-            toastContainer: document.getElementById('toast-container')
+            predefinedFilterContainer: document.getElementById('predefined-filters'), toastContainer: document.getElementById('toast-container'),
+            themeToggleBtn: document.getElementById('theme-toggle'), themeIconLight: document.getElementById('theme-icon-light'), themeIconDark: document.getElementById('theme-icon-dark')
         };
 
         // --- Core Initialization ---
         function initialize() {
-            connectWebSocket();
-            setupEventListeners();
-            updateButtonStates(); 
+            initializeTheme(); connectWebSocket(); setupEventListeners(); updateUiState();
+            setTimeout(() => { if (typeof tippy === 'function') { applyHeaderTooltips(); tippy('[data-tippy-content]', { theme: 'sp3ctr-glass', delay: [200, 0], animation: 'fade' }); } else { console.error("Tippy.js not loaded."); } }, 500);
         }
 
-        // --- WebSocket Connection & Message Handling ---
+        // --- WebSocket & Message Handling ---
         function connectWebSocket() {
             updateStatusDisplay("Attempting WebSocket connection...");
             try { socket = new WebSocket(WEBSOCKET_URL); } catch (e) { console.error("CRITICAL ERROR CREATING WebSocket object:", e); updateStatusDisplay(`Error: ${e.message}`, true); disableAllControls(); return; }
@@ -183,7 +210,7 @@
         function handleServerMessage(message) {
             switch (message.type) {
                 case "interfaces": populateNetworkInterfaces(message.data); break;
-                case "packet_summary": addPacketToDisplay(message.data); packetsBufferedCount++; break;
+                case "packet_summary": addPacketToDisplay(message.data); packetsBufferedCount++; updateUiState(); break;
                 case "packet_details": displayPacketDetails(message.data); break;
                 case "pcap_list": populatePcapModal(message.data); break;
                 case "status":
@@ -193,18 +220,31 @@
                     const match = message.message.match(/(\d+) packets (buffered|loaded)/);
                     if (match) packetsBufferedCount = parseInt(match[1], 10); 
                     else if (!isCapturing && !isLoadingFile) packetsBufferedCount = 0;
-                    updateButtonStates(); 
+                    updateUiState(); 
                     break;
-                case "error": isLoadingFile = false; updateButtonStates(); showToast(message.message, 'error'); break;
+                case "error": isLoadingFile = false; updateUiState(); showToast(message.message, 'error'); break;
                 default: console.warn("Unknown message type:", message.type);
             }
         }
         
         // --- UI Update & Display Functions ---
         function updateStatusDisplay(message, isError = false, isConnected = false, isActivelyCapturing = false) { if (allElements.captureStatus) allElements.captureStatus.textContent = `Status: ${message}`; if (allElements.statusIndicatorLight) { if (isError) allElements.statusIndicatorLight.className = 'status-indicator status-stopped'; else if (isActivelyCapturing) allElements.statusIndicatorLight.className = 'status-indicator status-capturing'; else if (isConnected) allElements.statusIndicatorLight.className = 'status-indicator status-stopped'; else allElements.statusIndicatorLight.className = 'status-indicator status-connecting'; } }
-        function updateButtonStates() {
+        function updateUiState() {
             const hasInterfaces = allElements.networkInterfaceSelect.options.length > 0 && allElements.networkInterfaceSelect.options[0].value !== "";
+            const hasPacketsOnScreen = allElements.packetTableBody.querySelectorAll('tr:not(#no-packets-row)').length > 0;
             if (socket && socket.readyState === WebSocket.OPEN) {
+                const enableFilters = !isCapturing && hasPacketsOnScreen;
+                allElements.filterInput.disabled = !enableFilters;
+                allElements.applyFilterBtn.disabled = !enableFilters;
+                allElements.clearFilterBtn.disabled = !enableFilters;
+                allElements.applyFilterBtn.classList.toggle('btn-disabled', !enableFilters);
+                allElements.clearFilterBtn.classList.toggle('btn-disabled', !enableFilters);
+                allElements.predefinedFilterContainer.querySelectorAll('button').forEach(btn => {
+                    btn.disabled = !enableFilters;
+                    btn.classList.toggle('btn-disabled', !enableFilters);
+                    if(enableFilters && btn.classList.contains('active')) btn.classList.remove('btn-disabled');
+                });
+                updateActiveFilterButton(currentFilterText);
                 if (isLoadingFile) { disableAllControls(true); return; }
                 if (isCapturing) {
                     allElements.startCaptureBtn.disabled = true; allElements.stopCaptureBtn.disabled = false; allElements.saveCaptureBtn.disabled = true; allElements.loadPcapBtn.disabled = true;
@@ -218,42 +258,34 @@
                 allElements.networkInterfaceSelect.disabled = isCapturing;
             } else { disableAllControls(); }
         }
-        function populateNetworkInterfaces(interfaces) { const select = allElements.networkInterfaceSelect; if (!select) return; select.innerHTML = ''; if (interfaces && Array.isArray(interfaces) && interfaces.length > 0) { interfaces.forEach(iface => { if (iface && iface.id && iface.name) { const option = document.createElement('option'); option.value = iface.id; option.textContent = iface.name; select.appendChild(option); } }); if (select.options.length > 0) { select.selectedIndex = 0; select.disabled = false; updateStatusDisplay(`Interfaces loaded. Ready.`, false, true); } else { select.innerHTML = '<option value="">No valid interfaces.</option>'; select.disabled = true; updateStatusDisplay("No valid interfaces found.", true); } } else { select.innerHTML = '<option value="">No interfaces from server.</option>'; select.disabled = true; updateStatusDisplay("Failed to load interfaces.", true); } updateButtonStates(); }
-        function addPacketToDisplay(packetData) { if (allElements.noPacketsRow) allElements.noPacketsRow.style.display = 'none'; const row = allElements.packetTableBody.insertRow(0); row.className = 'packet-row cursor-pointer'; row.dataset.packetIndex = packetData.index; const createCell = (text, ...classes) => { const cell = row.insertCell(); cell.className = `p-2 border-b border-gray-700 text-xs ${classes.join(' ')}`; cell.textContent = String(text ?? "N/A"); return cell; }; createCell(packetData.timestamp); createCell(packetData.srcIp, 'font-mono'); createCell(packetData.destIp, 'font-mono'); const protoCell = createCell(packetData.protocol); if (packetData.protocol) { if (packetData.protocol === 'TCP') protoCell.classList.add('text-blue-400'); else if (packetData.protocol === 'UDP') protoCell.classList.add('text-purple-400'); else if (packetData.protocol === 'ICMP') protoCell.classList.add('text-red-400'); else if (packetData.protocol === 'DNS') protoCell.classList.add('text-green-400'); } createCell(packetData.length); const infoCell = createCell(packetData.info, 'truncate'); infoCell.title = packetData.info; if (currentFilterText !== "") { let rowMatches = [...row.cells].some(cell => cell.textContent.toLowerCase().includes(currentFilterText)); row.style.display = rowMatches ? '' : 'none'; } const maxRows = 200; if (allElements.packetTableBody.rows.length > maxRows + 1) { for (let i = allElements.packetTableBody.rows.length - 1; i >= 0; i--) { if (allElements.packetTableBody.rows[i].id !== 'no-packets-row') { allElements.packetTableBody.deleteRow(i); break; } } } }
-        function displayPacketDetails(details) { allElements.detailContent.innerHTML = ''; if (!details || !Array.isArray(details) || details.length === 0) { allElements.detailContent.innerHTML = '<p class="text-gray-500">No detailed layer information available.</p>'; return; } details.forEach(layer => { const layerDiv = document.createElement('div'); layerDiv.className = 'detail-layer'; const header = document.createElement('div'); header.className = 'detail-layer-header'; header.textContent = layer.layer_name || 'Unnamed Layer'; const content = document.createElement('div'); content.className = 'detail-layer-content'; header.onclick = () => content.style.display = content.style.display === 'none' ? 'block' : 'none'; let hasFields = false; if(layer.fields) { for (const [key, value] of Object.entries(layer.fields)) { hasFields = true; const fieldDiv = document.createElement('div'); fieldDiv.className = 'detail-field'; fieldDiv.innerHTML = `<span class="detail-field-key">${key}</span><span class="detail-field-value">${String(value ?? 'N/A')}</span>`; content.appendChild(fieldDiv); } } if (!hasFields) { content.innerHTML = '<p class="text-gray-400 text-sm">No fields to show.</p>'; } layerDiv.appendChild(header); layerDiv.appendChild(content); allElements.detailContent.appendChild(layerDiv); }); }
+        function populateNetworkInterfaces(interfaces) { const select = allElements.networkInterfaceSelect; if (!select) return; select.innerHTML = ''; if (interfaces && Array.isArray(interfaces) && interfaces.length > 0) { interfaces.forEach(iface => { if (iface && iface.id && iface.name) { const option = document.createElement('option'); option.value = iface.id; option.textContent = iface.name; select.appendChild(option); } }); if (select.options.length > 0) { select.selectedIndex = 0; select.disabled = false; updateStatusDisplay(`Interfaces loaded. Ready.`, false, true); } else { select.innerHTML = '<option value="">No valid interfaces.</option>'; select.disabled = true; updateStatusDisplay("No valid interfaces found.", true); } } else { select.innerHTML = '<option value="">No interfaces from server.</option>'; select.disabled = true; updateStatusDisplay("Failed to load interfaces.", true); } updateUiState(); }
+        function addPacketToDisplay(packetData) { if (allElements.noPacketsRow) allElements.noPacketsRow.style.display = 'none'; const row = allElements.packetTableBody.insertRow(0); row.className = 'packet-row'; row.dataset.packetIndex = packetData.index; const createCell = (text, ...classes) => { const cell = row.insertCell(); cell.className = `p-2 border-b border-slate-300 dark:border-slate-700 text-xs ${classes.join(' ')}`; cell.textContent = String(text ?? "N/A"); return cell; }; createCell(packetData.timestamp); createCell(packetData.srcIp, 'font-mono'); createCell(packetData.destIp, 'font-mono'); const protocolText = packetData.protocol || "Unknown"; const protocolEmoji = protocolIcons[protocolText.toUpperCase()] || protocolIcons[Object.keys(protocolIcons).find(k => protocolText.includes(k))] || protocolIcons["DEFAULT"]; const protoCell = createCell(`${protocolEmoji} ${protocolText}`); if (protocolText.includes('TCP')) protoCell.classList.add('text-blue-600', 'dark:text-blue-400'); else if (protocolText.includes('UDP')) protoCell.classList.add('text-purple-600', 'dark:text-purple-400'); else if (protocolText.includes('ICMP')) protoCell.classList.add('text-red-600', 'dark:text-red-400'); else if (protocolText.includes('DNS')) protoCell.classList.add('text-green-600', 'dark:text-green-400'); else protoCell.classList.add('text-slate-600', 'dark:text-slate-400'); createCell(packetData.length); const infoCell = createCell(packetData.info, 'truncate'); infoCell.title = packetData.info; if (currentFilterText !== "") { let rowMatches = [...row.cells].some(cell => cell.textContent.toLowerCase().includes(currentFilterText)); row.style.display = rowMatches ? '' : 'none'; } const maxRows = 200; if (allElements.packetTableBody.rows.length > maxRows + 1) { for (let i = allElements.packetTableBody.rows.length - 1; i >= 0; i--) { if (allElements.packetTableBody.rows[i].id !== 'no-packets-row') { allElements.packetTableBody.deleteRow(i); break; } } } }
+        function displayPacketDetails(details) { allElements.detailContent.innerHTML = ''; if (!details || !Array.isArray(details) || details.length === 0) { allElements.detailContent.innerHTML = '<p class="text-gray-500">No detailed layer information available.</p>'; return; } details.forEach(layer => { const layerDiv = document.createElement('div'); layerDiv.className = 'detail-layer'; const header = document.createElement('div'); header.className = 'detail-layer-header'; header.textContent = layer.layer_name || 'Unnamed Layer'; const content = document.createElement('div'); content.className = 'detail-layer-content'; header.onclick = () => content.style.display = content.style.display === 'none' ? 'block' : 'none'; let hasFields = false; if(layer.fields) { for (const [key, value] of Object.entries(layer.fields)) { hasFields = true; const fieldDiv = document.createElement('div'); fieldDiv.className = 'detail-field'; const keySpan = document.createElement('span'); keySpan.className = 'detail-field-key'; keySpan.textContent = key; if (tooltips[key]) { keySpan.dataset.tippyContent = tooltips[key]; } const valueSpan = document.createElement('span'); valueSpan.className = 'detail-field-value'; valueSpan.textContent = String(value ?? 'N/A'); fieldDiv.appendChild(keySpan); fieldDiv.appendChild(valueSpan); content.appendChild(fieldDiv); } } if (!hasFields) { content.innerHTML = '<p class="text-gray-400 text-sm">No fields to show.</p>'; } layerDiv.appendChild(header); layerDiv.appendChild(content); allElements.detailContent.appendChild(layerDiv); }); if(typeof tippy === 'function') { tippy('#detail-content [data-tippy-content]', { theme: 'sp3ctr-glass', delay: [200, 0], animation: 'fade' }); } }
         function populatePcapModal(fileList) { allElements.pcapFileList.innerHTML = ''; if (fileList && fileList.length > 0) { fileList.forEach(filename => { const li = document.createElement('li'); li.textContent = filename; li.dataset.filename = filename; allElements.pcapFileList.appendChild(li); }); } else { allElements.pcapFileList.innerHTML = '<li>No saved capture files found.</li>'; } allElements.pcapModalOverlay.classList.remove('hidden'); }
         function showToast(message, type = 'info') { if (!allElements.toastContainer) return; const toast = document.createElement('div'); toast.className = `toast toast-${type}`; toast.textContent = message; allElements.toastContainer.appendChild(toast); setTimeout(() => { toast.remove(); }, 3900); }
+        function updateActiveFilterButton(filterText) { const buttons = allElements.predefinedFilterContainer.querySelectorAll('.filter-btn'); buttons.forEach(btn => { if (btn.dataset.filter.toLowerCase() === filterText.toLowerCase()) { btn.classList.add('active'); } else { btn.classList.remove('active'); } }); }
 
         // --- Event Handlers ---
         function handleStartCapture() { const selectedInterface = allElements.networkInterfaceSelect.value; if (!selectedInterface) return; const packetRows = allElements.packetTableBody.querySelectorAll('tr:not(#no-packets-row)'); packetRows.forEach(row => row.remove()); if (allElements.noPacketsRow) { allElements.noPacketsRow.cells[0].textContent = `Capture started...`; allElements.noPacketsRow.style.display = 'table-row'; } sendCommand({ command: "start_capture", interface: selectedInterface }); packetsBufferedCount = 0; allElements.filterInput.value = ""; applyCurrentFilter(); }
         function handleStopCapture() { sendCommand({ command: "stop_capture" }); }
         function handleSaveCapture() { if (!isCapturing && packetsBufferedCount > 0) sendCommand({ command: "save_capture" }); }
         function handleLoadPcap() { if (!isCapturing) sendCommand({ command: "get_pcap_list" }); }
-        function handlePcapFileSelect(event) { if (event.target && event.target.dataset.filename) { const filename = event.target.dataset.filename; const packetRows = allElements.packetTableBody.querySelectorAll('tr:not(#no-packets-row)'); packetRows.forEach(row => row.remove()); if (allElements.noPacketsRow) { allElements.noPacketsRow.cells[0].textContent = `Loading ${filename}...`; allElements.noPacketsRow.style.display = 'table-row'; } isLoadingFile = true; updateButtonStates(); sendCommand({ command: "load_pcap_file", "filename": filename }); allElements.pcapModalOverlay.classList.add('hidden'); } }
+        function handlePcapFileSelect(event) { if (event.target && event.target.dataset.filename) { const filename = event.target.dataset.filename; const packetRows = allElements.packetTableBody.querySelectorAll('tr:not(#no-packets-row)'); packetRows.forEach(row => row.remove()); if (allElements.noPacketsRow) { allElements.noPacketsRow.cells[0].textContent = `Loading ${filename}...`; allElements.noPacketsRow.style.display = 'table-row'; } isLoadingFile = true; updateUiState(); sendCommand({ command: "load_pcap_file", "filename": filename }); allElements.pcapModalOverlay.classList.add('hidden'); } }
         function handleRowClick(event) { let targetRow = event.target.closest('tr.packet-row'); if (targetRow && targetRow.dataset.packetIndex !== undefined) { const packetIndex = targetRow.dataset.packetIndex; const currentlySelected = document.querySelector('.packet-row.selected'); if (currentlySelected) currentlySelected.classList.remove('selected'); targetRow.classList.add('selected'); sendCommand({ command: "get_packet_details", index: packetIndex }); allElements.detailPanel.classList.add('visible'); allElements.mainContent.classList.add('md:w-3/5', 'lg:w-2/3', 'xl:w-3/4'); } }
-        function applyCurrentFilter() { currentFilterText = allElements.filterInput.value.trim().toLowerCase(); let visibleRowCount = 0; let hasPacketRows = false; for (let row of allElements.packetTableBody.rows) { if (row.id === 'no-packets-row') continue; hasPacketRows = true; let rowMatches = currentFilterText === "" ? true : [...row.cells].some(cell => cell.textContent.toLowerCase().includes(currentFilterText)); row.style.display = rowMatches ? '' : 'none'; if (rowMatches) visibleRowCount++; } if (allElements.noPacketsRow) { if (hasPacketRows && visibleRowCount === 0) { allElements.noPacketsRow.cells[0].textContent = `No packets match filter: "${allElements.filterInput.value.trim()}"`; allElements.noPacketsRow.style.display = 'table-row'; } else { allElements.noPacketsRow.style.display = hasPacketRows ? 'none' : 'table-row'; if(!hasPacketRows) allElements.noPacketsRow.cells[0].textContent = 'No packets to display.'; } } }
+        function applyCurrentFilter() { currentFilterText = allElements.filterInput.value.trim().toLowerCase(); updateActiveFilterButton(currentFilterText); let visibleRowCount = 0; let hasPacketRows = false; for (let row of allElements.packetTableBody.rows) { if (row.id === 'no-packets-row') continue; hasPacketRows = true; let rowMatches = currentFilterText === "" ? true : (currentFilterText === 'http/s' ? [...row.cells].some(cell => cell.textContent.toLowerCase().includes('http') || cell.textContent.toLowerCase().includes('tls')) : [...row.cells].some(cell => cell.textContent.toLowerCase().includes(currentFilterText))); row.style.display = rowMatches ? '' : 'none'; if (rowMatches) visibleRowCount++; } if (allElements.noPacketsRow) { if (hasPacketRows && visibleRowCount === 0) { allElements.noPacketsRow.cells[0].textContent = `No packets match filter: "${allElements.filterInput.value.trim()}"`; allElements.noPacketsRow.style.display = 'table-row'; } else { allElements.noPacketsRow.style.display = hasPacketRows ? 'none' : 'table-row'; if(!hasPacketRows) allElements.noPacketsRow.cells[0].textContent = 'No packets to display.'; } } }
         function handleClearFilter() { allElements.filterInput.value = ""; applyCurrentFilter(); }
+        function handlePredefinedFilterClick(event) { if (event.target.tagName === 'BUTTON' && event.target.dataset.filter !== undefined) { const filterTerm = event.target.dataset.filter; allElements.filterInput.value = filterTerm; applyCurrentFilter(); } }
+        function handleThemeToggle() { const isDark = document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', isDark ? 'dark' : 'light'); updateThemeIcons(isDark); }
+        function updateThemeIcons(isDark) { if (isDark) { allElements.themeIconLight.classList.remove('hidden'); allElements.themeIconDark.classList.add('hidden'); } else { allElements.themeIconLight.classList.add('hidden'); allElements.themeIconDark.classList.remove('hidden'); } }
+        function initializeTheme() { const savedTheme = localStorage.getItem('theme'); const osPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches; const isDark = savedTheme ? savedTheme === 'dark' : osPrefersDark; if (isDark) { document.documentElement.classList.add('dark'); } else { document.documentElement.classList.remove('dark'); } updateThemeIcons(isDark); }
         
         // --- Initial Setup ---
+        function applyHeaderTooltips() { const headers = document.querySelectorAll('#packet-display-area th'); headers.forEach(header => { const tooltipText = tooltips[header.textContent]; if (tooltipText) header.dataset.tippyContent = tooltipText; }); const predefinedButtons = document.querySelectorAll('#predefined-filters button'); predefinedButtons.forEach(btn => { const filter = btn.dataset.filter; let tooltipText = ""; if (filter === "") tooltipText = "Show all packets."; else if (filter === "HTTP/S") tooltipText = tooltips[filter]; else tooltipText = tooltips[filter.toUpperCase()]; if(tooltipText) btn.dataset.tippyContent = tooltipText; }); }
         function setupEventListeners() { 
-            const listeners = {
-                'start-capture-btn': handleStartCapture, 'stop-capture-btn': handleStopCapture,
-                'save-capture-btn': handleSaveCapture, 'load-pcap-btn': handleLoadPcap,
-                'packet-table-body': handleRowClick, 'close-detail-btn': () => {
-                    allElements.detailPanel.classList.remove('visible');
-                    allElements.mainContent.classList.remove('md:w-3/5', 'lg:w-2/3', 'xl:w-3/4');
-                    const sel = document.querySelector('.packet-row.selected'); if (sel) sel.classList.remove('selected');
-                },
-                'close-pcap-modal-btn': () => allElements.pcapModalOverlay.classList.add('hidden'),
-                'pcap-file-list': handlePcapFileSelect,
-                'apply-filter-btn': applyCurrentFilter, 'clear-filter-btn': handleClearFilter,
-                'network-interface': updateButtonStates
-            };
-            for (const [id, handler] of Object.entries(listeners)) { if (document.getElementById(id)) {
-                if(id === 'network-interface') document.getElementById(id).addEventListener('change', handler);
-                else document.getElementById(id).addEventListener('click', handler);
-            }}
+            const listeners = { 'start-capture-btn': handleStartCapture, 'stop-capture-btn': handleStopCapture, 'save-capture-btn': handleSaveCapture, 'load-pcap-btn': handleLoadPcap, 'packet-table-body': handleRowClick, 'close-detail-btn': () => { allElements.detailPanel.classList.remove('visible'); allElements.mainContent.classList.remove('md:w-3/5', 'lg:w-2/3', 'xl:w-3/4'); const sel = document.querySelector('.packet-row.selected'); if (sel) sel.classList.remove('selected'); }, 'close-pcap-modal-btn': () => allElements.pcapModalOverlay.classList.add('hidden'), 'pcap-file-list': handlePcapFileSelect, 'apply-filter-btn': applyCurrentFilter, 'clear-filter-btn': handleClearFilter, 'predefined-filters': handlePredefinedFilterClick, 'theme-toggle': handleThemeToggle };
+            for (const [id, handler] of Object.entries(listeners)) { if (document.getElementById(id)) document.getElementById(id).addEventListener('click', handler); }
             allElements.filterInput.addEventListener('keypress', (event) => { if (event.key === 'Enter') applyCurrentFilter(); });
+            allElements.networkInterfaceSelect.addEventListener('change', updateUiState);
         }
 
         function disableAllControls(keepLoadButtonEnabled = false) {
@@ -261,6 +293,7 @@
             if (!keepLoadButtonEnabled) elementsToDisable.push(allElements.loadPcapBtn);
             elementsToDisable.forEach(el => { if (el) { el.disabled = true; if (el.tagName === 'BUTTON') el.classList.add('btn-disabled'); }});
             if(allElements.filterInput) allElements.filterInput.disabled = true;
+            if(allElements.predefinedFilterContainer) allElements.predefinedFilterContainer.querySelectorAll('button').forEach(btn => {btn.disabled = true; btn.classList.add('btn-disabled');});
         }
 
         document.addEventListener('DOMContentLoaded', () => {
