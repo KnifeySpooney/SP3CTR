@@ -4,7 +4,7 @@ Welcome to the SP3CTR (pronounced "specter") development roadmap! This document 
 
 Our goal is to build SP3CTR into an indispensable tool for cybersecurity hobbyists, students, and anyone curious about the digital conversations happening on their network.
 
-##  ⛵ Current Status: Incremental MVP (v0.3.1 - "Galiano")
+##  🏔️ Current Status: Phase 1 Complete (v0.5.8 - "Denman")
 
 ### ✅ Core Functionality
 
@@ -28,7 +28,7 @@ Our goal is to build SP3CTR into an indispensable tool for cybersecurity hobbyis
 
 Our development will proceed in phases, incrementally adding features and refining the user experience.
 
-### Phase 1: Enhancing Core Functionality & User Experience (Est. v0.2 – v0.5)
+### Phase 1: Enhancing Core Functionality & User Experience - 100 % Complete* (Est. v0.2 – v0.5.x) ✅
 
 Focused on making the current tool more robust, user-friendly, and capable for basic analysis.
 
@@ -37,20 +37,20 @@ Focused on making the current tool more robust, user-friendly, and capable for b
 - Implement functionality to save captured packets to PCAP files  ✅
 - Allow loading and analyzing existing PCAP files within SP3CTR's interface  ✅
 
-#### 📚 Enhanced Packet Detail View - 50% Complete
+#### 📚 Enhanced Packet Detail View ✅ - 100% Complete
 
 - Provide a dedicated panel to show more detailed, human-readable information about a selected packet  ✅
-- Include tooltips ❓ to explain common networking terms and abbreviations directly in the UI  - In Production
+- Include tooltips ❓ to explain common networking terms and abbreviations directly in the UI  ✅
 
-#### 🎨 UI Polish & Refinements
+#### 🎨 UI Polish & Refinements 100 % Complete
 
-- Introduce more intuitive icons for protocols and actions  
+- Introduce more intuitive icons for protocols and actions ✅ 
 - Refine the layout for better readability and information hierarchy ✅
-- Glassmorphism UI - In Production
+- Glassmorphism UI - In Beta* ✅
 
-#### 🔍 Advanced Basic Filtering - 50 % Complete
+#### 🔍 Advanced Basic Filtering ✅ - 100 % Complete
 
-- Expand pre-defined filters (e.g., "Show only HTTP/S traffic", "Show only DNS traffic")  
+- Expand pre-defined filters (e.g., "Show only HTTP/S traffic", "Show only DNS traffic")  ✅
 - Implement a simple text input field for filtering by IP address, port number, or protocol name  ✅
 
 ---
