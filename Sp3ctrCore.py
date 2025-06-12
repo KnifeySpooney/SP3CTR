@@ -1,6 +1,6 @@
 # SP3CTR - Python Backend
 # Spectral Packet Capture & Threat Recognition
-# Version: 0.3.1 - Galiano (Patched - No Filtering)
+# Version: 0.5.8 - Denman - Patch Merged
 # Author: KnifeySpooney
 # Inspired by clean, direct code philosophy. "Together, Strong"
 
