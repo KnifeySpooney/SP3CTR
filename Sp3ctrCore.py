@@ -1,6 +1,6 @@
-# SP3CTR - Python Backend
+# SP3CTR - Python Backend (WebSocket Server with Packet Detail Dissection)
 # Spectral Packet Capture & Threat Recognition
-# Version: 0.5.8 - Denman - Patch Merged
+# Version: 0.6.1 (Cross-Platform Interface Fix)
 # Author: KnifeySpooney
 # Inspired by clean, direct code philosophy. "Together, Strong"
 
@@ -17,7 +17,8 @@ from datetime import datetime
 import traceback 
 
 try:
-    from scapy.all import sniff, get_if_list, get_if_hwaddr, get_if_addr, rdpcap
+    # Use conf.ifaces for detailed interface info
+    from scapy.all import sniff, conf, get_if_addr
     from scapy.utils import wrpcap 
     from scapy.layers.inet import IP, TCP, UDP, ICMP
     from scapy.layers.dns import DNS
@@ -41,9 +42,9 @@ current_sniffing_interface: str | None = None
 captured_packets_buffer = [] 
 
 # --- Version ---
-__version__ = "0.3.1"
+__version__ = "0.6.1"
 
-# --- Helper & Core Functions ---
+# --- Helper Functions ---
 def ensure_captures_dir():
     if not os.path.exists(CAPTURES_DIR):
         try:
@@ -59,62 +60,56 @@ def dissect_packet_details(packet):
     layer_counter = 0
     while True:
         layer = packet.getlayer(layer_counter)
-        if layer is None: break
+        if layer is None:
+            break
         layer_details = {"layer_name": layer.name, "fields": {}}
         for field_name, field_value in layer.fields.items():
-            try:
-                if isinstance(field_value, (str, int, float, bool)) or field_value is None:
-                    layer_details["fields"][field_name] = field_value
-                elif isinstance(field_value, bytes):
+            if isinstance(field_value, (str, int, float, bool)) or field_value is None:
+                layer_details["fields"][field_name] = field_value
+            elif isinstance(field_value, bytes):
+                try:
                     layer_details["fields"][field_name] = field_value.decode('utf-8', 'replace')
-                else:
-                    layer_details["fields"][field_name] = repr(field_value)
-            except Exception:
-                layer_details["fields"][field_name] = "Could not represent field"
+                except UnicodeDecodeError:
+                    layer_details["fields"][field_name] = field_value.hex()
+            else:
+                layer_details["fields"][field_name] = repr(field_value)
         details.append(layer_details)
         layer_counter += 1
     return details
 
-def get_pcap_list():
-    print("Scanning for PCAP files...")
-    if not os.path.isdir(CAPTURES_DIR): return []
-    try:
-        files = [f for f in os.listdir(CAPTURES_DIR) if f.lower().endswith(('.pcap', '.pcapng'))]
-        print(f"Found {len(files)} PCAP files.")
-        return sorted(files, key=lambda f: os.path.getmtime(os.path.join(CAPTURES_DIR, f)), reverse=True)
-    except Exception as e:
-        print(f"Error reading captures directory: {e}")
-        return []
 
+# --- Core Functions ---
+
+# *** UPDATED FUNCTION with a more reliable way to get the interface ID ***
 def list_network_interfaces_data():
-    print("Scanning for network interfaces...")
+    """
+    Provides a structured list of network interfaces with clean names and IPs.
+    This version uses the dictionary key from conf.ifaces as the reliable system ID.
+    """
     interfaces_data = []
-    iface_names = get_if_list()
-    for i, iface_name in enumerate(iface_names):
-        try:
-            hwaddr = get_if_hwaddr(iface_name)
-            ipaddr = get_if_addr(iface_name)
-            interfaces_data.append({"id": iface_name, "name": f"{iface_name} (MAC: {hwaddr}, IP: {ipaddr})"})
-        except Exception:
-            interfaces_data.append({"id": iface_name, "name": f"{iface_name} (Details N/A)"})
+    # Use conf.ifaces which holds detailed interface objects from Scapy
+    # The key (iface_id) is the reliable identifier Scapy uses for sniffing.
+    for iface_id, iface_obj in conf.ifaces.items():
+        clean_name = iface_obj.name or iface_obj.description or "Unknown Interface"
+        
+        # The key of the dictionary item is the system ID we need.
+        system_id = iface_id 
+
+        ip_addr = get_if_addr(system_id)
+        
+        interfaces_data.append({
+            "id": system_id, 
+            "name": clean_name,
+            "ip": ip_addr if ip_addr != "0.0.0.0" else "No IP Assigned"
+        })
+            
+    print(f"Discovered interfaces: {interfaces_data}")
     return interfaces_data
 
-def get_packet_summary_data(packet, index):
-    """
-    Extracts a simplified summary and includes the packet's index.
-    *** FIXED: Handles EDecimal timestamps from PCAP files. ***
-    """
-    packet_time = packet.time if hasattr(packet, 'time') else time.time()
-    
-    # *** FIX IS HERE: Explicitly cast packet_time to a float ***
-    # This handles the EDecimal object correctly.
-    try:
-        ts = float(packet_time)
-        timestamp = time.strftime("%H:%M:%S", time.localtime(ts)) + f".{int((ts % 1) * 1000):03d}"
-    except (TypeError, ValueError):
-        # Fallback if timestamp is somehow invalid
-        timestamp = time.strftime("%H:%M:%S")
 
+def get_packet_summary_data(packet, index):
+    packet_time = packet.time if hasattr(packet, 'time') else time.time()
+    timestamp = time.strftime("%H:%M:%S", time.localtime(packet_time)) + f".{int((packet_time % 1) * 1000):03d}"
     src_ip, dst_ip, src_port, dst_port, protocol_name, info = "N/A", "N/A", "N/A", "N/A", "Unknown", ""
     length = len(packet)
 
@@ -128,28 +123,34 @@ def get_packet_summary_data(packet, index):
         elif packet.haslayer(UDP):
             udp_layer = packet.getlayer(UDP)
             protocol_name, src_port, dst_port = "UDP", udp_layer.sport, udp_layer.dport
-            if packet.haslayer(DNS): 
+            if packet.haslayer(DNS):
+                dns_layer = packet.getlayer(DNS)
                 protocol_name = "DNS"
-                info = "DNS Query/Response" 
+                if dns_layer.qd:
+                    info = f"Standard query for {dns_layer.qd.qname.decode()}"
+                else:
+                    info = "DNS Response"
         elif packet.haslayer(ICMP):
             protocol_name = "ICMP"
             icmp_layer = packet.getlayer(ICMP)
             type_map = {0: "Echo Reply", 3: "Dest Unreachable", 8: "Echo Request", 11: "Time Exceeded"}
-            info = f"Type: {icmp_layer.type} ({type_map.get(icmp_layer.type, 'Other')})"
-        else: 
+            info = f"Type: {icmp_layer.type} ({type_map.get(icmp_layer.type, 'Other')}) Code: {icmp_layer.code}"
+        else:
             protocol_name = f"IPProto-{ip_layer.proto}"
             info = "L4 N/A"
     elif packet.haslayer(Ether):
         eth_layer = packet.getlayer(Ether)
         src_ip, dst_ip = eth_layer.src, eth_layer.dst 
-        protocol_name = f"L2 EtherType-{hex(eth_layer.type)}"
-        info = "L2 Traffic"
-    else: 
+        protocol_name = f"ARP" if eth_layer.type == 0x0806 else f"L2 EtherType-{hex(eth_layer.type)}"
+        info = "L2 Broadcast/Traffic"
+    else:
         info = "Unknown L2/L3"
 
     return {"index": index, "timestamp": timestamp, "srcIp": str(src_ip), "destIp": str(dst_ip),
             "srcPort": str(src_port), "destPort": str(dst_port), "protocol": protocol_name,
             "length": length, "info": info if info else "---"}
+
+
 async def send_to_clients(message_data: dict):
     if CONNECTED_CLIENTS:
         json_message = json.dumps(message_data)
@@ -158,11 +159,12 @@ async def send_to_clients(message_data: dict):
 async def packet_sender_callback(packet):
     global captured_packets_buffer
     try:
-        packet_index = len(captured_packets_buffer) 
+        packet_index = len(captured_packets_buffer)
         captured_packets_buffer.append(packet) 
         packet_data_for_client = get_packet_summary_data(packet, packet_index)
         asyncio.create_task(send_to_clients({"type": "packet_summary", "data": packet_data_for_client}))
-    except Exception as e: print(f"Error in packet_sender_callback: {e}")
+    except Exception as e:
+        print(f"Error in packet_sender_callback: {e}")
 
 def sniffing_loop(interface_name: str, stop_event: threading.Event, loop: asyncio.AbstractEventLoop):
     global current_sniffing_interface
@@ -171,62 +173,26 @@ def sniffing_loop(interface_name: str, stop_event: threading.Event, loop: asynci
     def scapy_callback_wrapper(pkt): asyncio.run_coroutine_threadsafe(packet_sender_callback(pkt), loop)
     try:
         sniff(iface=interface_name, prn=scapy_callback_wrapper, stop_filter=lambda pkt: stop_event.is_set(), store=0)
-    except Exception as e:
-        msg = f"Sniffing error on {interface_name}: {e}"
-        print(f"Thread: {msg}")
-        asyncio.run_coroutine_threadsafe(send_to_clients({"type": "error", "message": msg}), loop)
+    except Exception as e: print(f"Sniffing error: {e}")
     finally:
         msg = f"Capture stopped. {len(captured_packets_buffer)} packets buffered."
         print(f"Thread: Sniffing stopped. {len(captured_packets_buffer)} packets in buffer.")
         asyncio.run_coroutine_threadsafe(send_to_clients({"type": "status", "message": msg}), loop)
         current_sniffing_interface = None 
 
-async def load_and_stream_pcap(filename: str):
-    global captured_packets_buffer
-    if ".." in filename or os.path.isabs(filename):
-        await send_to_clients({"type": "error", "message": "Invalid filename."}); return
-    filepath = os.path.join(CAPTURES_DIR, filename)
-    if not os.path.exists(filepath):
-        await send_to_clients({"type": "error", "message": f"File not found: {filename}"}); return
-    await send_to_clients({"type": "status", "message": f"Loading {filename}..."})
-    try:
-        packets_from_file = rdpcap(filepath)
-        captured_packets_buffer.clear()
-        print(f"Streaming {len(packets_from_file)} packets from {filename}...")
-        for i, packet in enumerate(packets_from_file):
-            captured_packets_buffer.append(packet)
-            packet_summary = get_packet_summary_data(packet, i)
-            await send_to_clients({"type": "packet_summary", "data": packet_summary})
-            if (i + 1) % 100 == 0: await asyncio.sleep(0.01)
-        final_status_msg = f"Finished loading {filename}. {len(packets_from_file)} packets loaded."
-        print(final_status_msg)
-        await send_to_clients({"type": "status", "message": final_status_msg})
-    except Exception as e:
-        error_msg = f"Failed to load or process {filename}: {e}"
-        print(error_msg)
-        await send_to_clients({"type": "error", "message": error_msg})
-
-async def handler(websocket: WebSocketServerProtocol):
-    global sniffing_thread, stop_sniffing_event, captured_packets_buffer
+async def handler(websocket: WebSocketServerProtocol, path: str = None):
+    global sniffing_thread, stop_sniffing_event, current_sniffing_interface, captured_packets_buffer
     main_event_loop = asyncio.get_running_loop() 
     CONNECTED_CLIENTS.add(websocket)
     print(f"Client connected: {websocket.remote_address}")
     try:
-        # *** ROBUST INITIALIZATION BLOCK ***
-        try:
-            print("Attempting to get and send interface list...")
-            interfaces = list_network_interfaces_data()
-            await websocket.send(json.dumps({"type": "interfaces", "data": interfaces}))
-            print("Successfully sent interface list.")
-        except Exception as e:
-            print(f"!!! CRITICAL ERROR during initial interface list: {e}")
-            traceback.print_exc()
-            await websocket.send(json.dumps({"type": "error", "message": "Failed to get network interfaces from server. Run as Admin/sudo?"}))
+        await websocket.send(json.dumps({"type": "interfaces", "data": list_network_interfaces_data()}))
         
         async for message in websocket:
             try:
                 data = json.loads(message)
                 command = data.get("command")
+                
                 if command == "start_capture":
                     if not (sniffing_thread and sniffing_thread.is_alive()):
                         interface = data.get("interface")
@@ -236,30 +202,41 @@ async def handler(websocket: WebSocketServerProtocol):
                             sniffing_thread = threading.Thread(target=sniffing_loop, args=(interface, stop_sniffing_event, main_event_loop), daemon=True)
                             sniffing_thread.start()
                             await send_to_clients({"type": "status", "message": f"Capture started on {interface}"})
+                
                 elif command == "stop_capture":
                     if sniffing_thread and sniffing_thread.is_alive():
                         stop_sniffing_event.set()
+                
                 elif command == "save_capture":
-                    if captured_packets_buffer and not (sniffing_thread and sniffing_thread.is_alive()):
-                        if ensure_captures_dir():
-                            ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-                            fname = os.path.join(CAPTURES_DIR, f"sp3ctr_capture_{ts}.pcap")
-                            wrpcap(fname, captured_packets_buffer)
-                            await websocket.send(json.dumps({"type": "status", "message": f"Saved: {os.path.basename(fname)}"}))
+                    if not captured_packets_buffer:
+                        await websocket.send(json.dumps({"type": "error", "message": "No packets to save."}))
+                    elif sniffing_thread and sniffing_thread.is_alive():
+                        await websocket.send(json.dumps({"type": "error", "message": "Stop capture first."}))
+                    else:
+                        filename = f"capture_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pcap"
+                        filepath = os.path.join(CAPTURES_DIR, filename)
+                        wrpcap(filepath, captured_packets_buffer)
+                        await send_to_clients({"type": "status", "message": f"Capture saved to {filepath}"})
+                
                 elif command == "get_packet_details":
-                    index = int(data.get("index", -1))
-                    if 0 <= index < len(captured_packets_buffer):
-                        details = dissect_packet_details(captured_packets_buffer[index])
-                        await websocket.send(json.dumps({"type": "packet_details", "data": details}))
-                elif command == "get_pcap_list":
-                    pcap_files = get_pcap_list()
-                    await websocket.send(json.dumps({"type": "pcap_list", "data": pcap_files}))
-                elif command == "load_pcap_file":
-                    filename = data.get("filename")
-                    if not (sniffing_thread and sniffing_thread.is_alive()) and filename:
-                        asyncio.create_task(load_and_stream_pcap(filename))
-            except Exception as e: print(f"Error handling message: {e}")
-    except Exception as e: print(f"Error in WebSocket connection handler: {e}")
+                    try:
+                        index = int(data.get("index", -1))
+                        if 0 <= index < len(captured_packets_buffer):
+                            packet_to_dissect = captured_packets_buffer[index]
+                            details = dissect_packet_details(packet_to_dissect)
+                            await websocket.send(json.dumps({"type": "packet_details", "data": details}))
+                        else:
+                            await websocket.send(json.dumps({"type": "error", "message": f"Invalid packet index: {index}"}))
+                    except (ValueError, TypeError):
+                        await websocket.send(json.dumps({"type": "error", "message": "Invalid index format."}))
+
+            except Exception as e: 
+                print(f"Error handling client message: {e}")
+                await websocket.send(json.dumps({"type": "error", "message": str(e)}))
+    
+    except Exception as e:
+        print(f"Unhandled error in WebSocket handler: {e}")
+        traceback.print_exc()
     finally:
         CONNECTED_CLIENTS.remove(websocket)
         print(f"Client connection cleanup: {websocket.remote_address}. Clients: {len(CONNECTED_CLIENTS)}")
@@ -274,12 +251,8 @@ async def main_server_loop():
 if __name__ == "__main__":
     try:
         asyncio.run(main_server_loop())
-    except KeyboardInterrupt: print("\nSP3CTR Core Backend terminated.")
+    except KeyboardInterrupt:
+        print("\nSP3CTR Core Backend terminated.")
     finally:
-        if sniffing_thread and sniffing_thread.is_alive():
-            print("Stopping active capture...")
-            stop_sniffing_event.set()
-            sniffing_thread.join(timeout=2)
-        print("Shutdown complete.")
-        input("--- Press Enter to close this backend window. ---")
-
+        if sys.platform == "win32":
+             input("--- Press Enter to close this backend window. ---")
