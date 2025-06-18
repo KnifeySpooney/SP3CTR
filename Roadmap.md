@@ -4,7 +4,7 @@ Welcome to the SP3CTR (pronounced "specter") development roadmap! This document 
 
 Our goal is to build SP3CTR into an indispensable tool for cybersecurity hobbyists, students, and anyone curious about the digital conversations happening on their network.
 
-##  🏔️ Current Status: Phase 1 Complete (v0.5.8 - "Denman")
+##  🏔️ Current Status: Phase 2 Mk.1 (v0.6.1 - "Aero")
 
 ### ✅ Core Functionality
 
@@ -17,10 +17,14 @@ Our goal is to build SP3CTR into an indispensable tool for cybersecurity hobbyis
 - 📊 Loading of locally stored PCAP files ✅ (NEW)
 - 🧑‍💻 Enhanced Packet View ✅ (NEW)
 
-### 🎨 Basic UI
+### 🎨 ✨ "Sp3ctr-Aero" UI
 
 - 🌑 Dark theme with Tailwind CSS  
-- 🌈 Simple protocol color-coding  
+- 🌈 Simple, easy to read protocol colours
+- 🍑 Gorgeous aradients
+- 🔮 Lightweight animations
+- 🎴 Custom "Sp3ctr-Aero" Tippy.js theme
+- 🎭 Packet Detail View focus mode
 
 ---
 
@@ -64,9 +68,9 @@ This phase brings SP3CTR's unique value: visual context and meaningful alerts.
 - Flag connections to/from known malicious IP addresses or domains using a curated, updatable local list  
 - Clear visual indicators for such flagged packets/connections  
 
-#### 🔓 Insecure Protocol Detection
+#### 🔓 Insecure Protocol Detection ✅ - 100 % Complete 
 
-- Identify and highlight the use of insecure protocols (Telnet, FTP, cleartext HTTP auth, etc.)  
+- Identify and highlight the use of insecure protocols (Telnet, FTP, cleartext HTTP auth, etc.)  ✅ 
 
 #### 📡 Basic Port Scan Detection
 
@@ -76,9 +80,9 @@ This phase brings SP3CTR's unique value: visual context and meaningful alerts.
 
 - Real-time chart (e.g., pie/bar) showing protocol distribution (TCP, UDP, DNS, HTTP, etc.)  
 
-#### 💡 "Why it Matters" Explanations
+#### 💡 "Why it Matters" Explanations ✅ - 100 % Complete 
 
-- For common packet types or alerts, include plain-language explanations of what they are and why they matter  
+- For common packet types or alerts, include plain-language explanations of what they are and why they matter  ✅
 
 ---
 
