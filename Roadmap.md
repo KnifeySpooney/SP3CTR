@@ -21,7 +21,7 @@ Our goal is to build SP3CTR into an indispensable tool for cybersecurity hobbyis
 
 - 🌑 Dark theme with Tailwind CSS  
 - 🌈 Simple, easy to read protocol colours
-- 🍑 Gorgeous aradients
+- 🍑 Gorgeous gradients
 - 🔮 Lightweight animations
 - 🎴 Custom "Sp3ctr-Aero" Tippy.js theme
 - 🎭 Packet Detail View focus mode
