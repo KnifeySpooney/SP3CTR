@@ -76,7 +76,7 @@ This phase brings SP3CTR's unique value: visual context and meaningful alerts.
 
 - Implement simple heuristics to detect and alert on port scanning patterns  
 
-#### 📊 Initial "Spectral" Display
+#### 📊 Initial "Spectral" Display - 50% complete. Alpha visualization. 
 
 - Real-time chart (e.g., pie/bar) showing protocol distribution (TCP, UDP, DNS, HTTP, etc.)  
 
