@@ -4,7 +4,7 @@ Welcome to the SP3CTR (pronounced "specter") development roadmap! This document 
 
 Our goal is to build SP3CTR into an indispensable tool for cybersecurity hobbyists, students, and anyone curious about the digital conversations happening on their network.
 
-##  🏔️ Current Status: Phase 2 Mk.1 (v0.6.1 - "Aero")
+##  🏔️ Current Status: Phase 3 Mk.3 (v0.9.5 - "Storyteller")
 
 ### ✅ Core Functionality
 
