@@ -4,28 +4,24 @@ Welcome to the SP3CTR (pronounced "specter") development roadmap! This document 
 
 Our goal is to build SP3CTR into an indispensable tool for cybersecurity hobbyists, students, and anyone curious about the digital conversations happening on their network.
 
-##  🏔️ Current Status: Phase 3 Mk.3 (v0.9.5 - "Storyteller")
+##  🏔️Phase 3: Enhanced Context & UX (Complete)
 
-### ✅ Core Functionality
+  🏷️ Heuristic Tagging: Automatic categorization of traffic (e.g., "Web Browsing", "Gaming").
 
-- 🖥️ Web-based UI for interaction  ✅
-- 📡 Network interface selection  ✅
-- ⏯️ Start/Stop real-time packet capture  ✅
-- 📄 Basic live display of packet essentials (Time, IPs, Proto, Length, Info)  ✅
-- 🔗 WebSocket communication between Python backend (Scapy) and HTML/JS frontend  ✅
-- 💽 Saving of PCAP files locally ✅ (NEW)
-- 📊 Loading of locally stored PCAP files ✅ (NEW)
-- 🧑‍💻 Enhanced Packet View ✅ (NEW)
+  📖 Conversation Storytelling: Translates packet sequences into readable micro-narratives.
 
-### 🎨 ✨ "Sp3ctr-Aero" UI
+  🎨 ✨ "Sp3ctr-Aero" UI Enhancements:
 
-- 🌑 Dark theme with Tailwind CSS  
-- 🌈 Simple, easy to read protocol colours
-- 🍑 Gorgeous gradients
-- 🔮 Lightweight animations
-- 🎴 Custom "Sp3ctr-Aero" Tippy.js theme
-- 🎭 Packet Detail View focus mode
+  🌑 Modern Dark Theme: Built with Tailwind CSS for a sleek, responsive interface.
 
+  🌈 Gorgeous Gradients & Animations: Creates a dynamic and polished user experience.
+
+  🎴 Custom Theming: Cohesive, custom-styled tooltips and notifications.
+
+  🎭 Focus Mode: An immersive view for deep packet inspection.
+  
+  ↔️ Traffic Flow Visualizer: A simple visual representation of the selected packet's journey.
+  
 ---
 
 ## 🚀 Path to SP3CTR 1.0
