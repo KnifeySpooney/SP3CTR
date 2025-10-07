@@ -1,7 +1,7 @@
 # SP3CTR
 ## Spectral Packet Capture & Threat Recognition
 
-[![Version](https://img.shields.io/badge/version-0.7.0-green.svg)](https://github.com/knifeyspooney/sp3ctr)
+[![Version](https://img.shields.io/badge/version-0.9.5-yellow.svg)](https://github.com/knifeyspooney/sp3ctr)
 [![License](https://img.shields.io/badge/license-GPLv2-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](#installation)
 
