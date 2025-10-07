@@ -63,7 +63,7 @@ Focused on making the current tool more robust, user-friendly, and capable for b
 
 This phase brings SP3CTR's unique value: visual context and meaningful alerts.
 
-#### 🚨 Basic Threat Intelligence Integration
+#### 🚨 Basic Threat Intelligence Integration ✅ - 100 % Complete
 
 - Flag connections to/from known malicious IP addresses or domains using a curated, updatable local list  
 - Clear visual indicators for such flagged packets/connections  
@@ -72,17 +72,17 @@ This phase brings SP3CTR's unique value: visual context and meaningful alerts.
 
 - Identify and highlight the use of insecure protocols (Telnet, FTP, cleartext HTTP auth, etc.)  ✅ 
 
-#### 📡 Basic Port Scan Detection
+#### 📡 Basic Port Scan Detection ✅ - 100 % Complete
 
 - Implement simple heuristics to detect and alert on port scanning patterns  
 
-#### 📊 Initial "Spectral" Display - 50% complete. Alpha visualization. 
+#### 📊 Initial "Spectral" Display - ✅ - 100 % Complete
 
 - Real-time chart (e.g., pie/bar) showing protocol distribution (TCP, UDP, DNS, HTTP, etc.)  
 
 #### 💡 "Why it Matters" Explanations ✅ - 100 % Complete 
 
-- For common packet types or alerts, include plain-language explanations of what they are and why they matter  ✅
+- For common packet types or alerts, include plain-language explanations of what they are and why they matter 
 
 ---
 
@@ -90,20 +90,20 @@ This phase brings SP3CTR's unique value: visual context and meaningful alerts.
 
 Designed to help users develop intuitive, story-based understandings of their traffic.
 
-#### 🌊 Simplified Traffic Flow Visualization (Alpha)
+#### 🌊 Simplified Traffic Flow Visualization (Alpha) 
 
 - Show "Your Computer" talking to remote IPs via basic visual graph  
 - Use lines/weights to indicate traffic type or volume  
 
-#### 🗂️ Application-Level Categorization (Heuristic)
+#### 🗂️ Application-Level Categorization (Heuristic) ✅ - 80 % Complete
 
 - Attempt heuristic grouping of traffic into categories: "Web Browsing", "DNS Lookup", "Online Gaming", etc.  
 
-#### 📜 Basic "Storytelling" for Packet Sequences
+#### 📜 Basic "Storytelling" for Packet Sequences ✅ - 100 % Complete
 
 - DNS query → TCP handshake → HTTP GET summarized as readable micro-narratives  
 
-#### ⚙️ More Sophisticated Anomaly Flags (Simple)
+#### ⚙️ More Sophisticated Anomaly Flags (Simple) ✅ - 80 % Complete
 
 - Flag odd behaviors: large DNS payloads, non-standard ports, etc.  
 - Clearly mark as heuristic—not authoritative  
